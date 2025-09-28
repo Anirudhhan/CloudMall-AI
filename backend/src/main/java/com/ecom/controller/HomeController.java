@@ -42,11 +42,22 @@ import com.ecom.util.CommonUtil;
 import io.micrometer.common.util.StringUtils;
 import jakarta.mail.MessagingException;
 import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
+import jakarta.servlet.http.HttpSession;
 
 @RestController
 @RequestMapping("/api")
-@CrossOrigin(origins = "*") // Configure this for your Next.js app domain
+@CrossOrigin(origins = {"http://localhost:3000", "http://127.0.0.1:3000"}, allowCredentials = "true")
 public class HomeController {
+
+    @Autowired
+    private AuthenticationManager authenticationManager;
 
     @Autowired
     private CategoryService categoryService;
@@ -66,9 +77,12 @@ public class HomeController {
     @Autowired
     private CartService cartService;
 
-    // Login endpoint
+    // Fixed login endpoint with proper session management
     @PostMapping("/login")
-    public ResponseEntity<Map<String, Object>> login(@RequestBody Map<String, String> loginRequest) {
+    public ResponseEntity<Map<String, Object>> login(
+            @RequestBody Map<String, String> loginRequest,
+            HttpServletRequest request) {
+
         Map<String, Object> response = new HashMap<>();
 
         String email = loginRequest.get("email");
@@ -81,30 +95,23 @@ public class HomeController {
         }
 
         try {
+            // Create authentication token
+            UsernamePasswordAuthenticationToken authToken =
+                    new UsernamePasswordAuthenticationToken(email, password);
+
+            // Authenticate using Spring Security
+            Authentication authentication = authenticationManager.authenticate(authToken);
+
+            // Create security context
+            SecurityContext securityContext = SecurityContextHolder.getContext();
+            securityContext.setAuthentication(authentication);
+
+            // Create and store session
+            HttpSession session = request.getSession(true);
+            session.setAttribute(HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY, securityContext);
+
             // Get user details
             UserDtls user = userService.getUserByEmail(email);
-
-            if (user == null) {
-                response.put("success", false);
-                response.put("message", "Invalid email or password");
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
-            }
-
-            // Check password
-            if (!passwordEncoder.matches(password, user.getPassword())) {
-                response.put("success", false);
-                response.put("message", "Invalid email or password");
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
-            }
-
-            // Check if account is active
-            if (!user.getIsEnable()) {
-                response.put("success", false);
-                response.put("message", "Account is disabled. Please contact administrator");
-                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
-            }
-
-            // Get cart count
             Integer cartCount = cartService.getCountCart(user.getId());
 
             // Prepare user response (exclude sensitive data)
@@ -114,11 +121,6 @@ public class HomeController {
             userInfo.put("email", user.getEmail());
             userInfo.put("role", user.getRole());
             userInfo.put("profileImage", user.getProfileImage());
-            userInfo.put("mobileNumber", user.getMobileNumber());
-            userInfo.put("address", user.getAddress());
-            userInfo.put("city", user.getCity());
-            userInfo.put("state", user.getState());
-            userInfo.put("pincode", user.getPincode());
 
             response.put("success", true);
             response.put("message", "Login successful");
@@ -127,6 +129,10 @@ public class HomeController {
 
             return ResponseEntity.ok(response);
 
+        } catch (BadCredentialsException e) {
+            response.put("success", false);
+            response.put("message", "Invalid email or password");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
         } catch (Exception e) {
             response.put("success", false);
             response.put("message", "Login failed: " + e.getMessage());
@@ -134,16 +140,26 @@ public class HomeController {
         }
     }
 
-    // Logout endpoint
+    // Fixed logout endpoint
     @PostMapping("/logout")
-    public ResponseEntity<Map<String, Object>> logout() {
+    public ResponseEntity<Map<String, Object>> logout(HttpServletRequest request) {
         Map<String, Object> response = new HashMap<>();
+
+        // Clear Spring Security context
+        SecurityContextHolder.clearContext();
+
+        // Invalidate session
+        HttpSession session = request.getSession(false);
+        if (session != null) {
+            session.invalidate();
+        }
+
         response.put("success", true);
         response.put("message", "Logout successful");
         return ResponseEntity.ok(response);
     }
 
-    // Check authentication status
+    // Auth check endpoint (should work now with proper sessions)
     @GetMapping("/auth/check")
     public ResponseEntity<Map<String, Object>> checkAuth(Principal principal) {
         Map<String, Object> response = new HashMap<>();
@@ -167,18 +183,13 @@ public class HomeController {
             // Get cart count
             Integer cartCount = cartService.getCountCart(user.getId());
 
-            // Prepare user response (exclude sensitive data)
+            // Prepare user response
             Map<String, Object> userInfo = new HashMap<>();
             userInfo.put("id", user.getId());
             userInfo.put("name", user.getName());
             userInfo.put("email", user.getEmail());
             userInfo.put("role", user.getRole());
             userInfo.put("profileImage", user.getProfileImage());
-            userInfo.put("mobileNumber", user.getMobileNumber());
-            userInfo.put("address", user.getAddress());
-            userInfo.put("city", user.getCity());
-            userInfo.put("state", user.getState());
-            userInfo.put("pincode", user.getPincode());
 
             response.put("authenticated", true);
             response.put("user", userInfo);
@@ -193,8 +204,6 @@ public class HomeController {
             return ResponseEntity.ok(response);
         }
     }
-
-    // Get user details and categories (common data)
     @GetMapping("/user-info")
     public ResponseEntity<Map<String, Object>> getUserInfo(Principal principal) {
         Map<String, Object> response = new HashMap<>();
