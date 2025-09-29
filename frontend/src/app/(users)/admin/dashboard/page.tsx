@@ -69,7 +69,7 @@ export default function AdminDashboard() {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
+        <div className="animate-spin rounded-full h-32 w-32 border-2 border-gray-300 border-t-gray-700"></div>
       </div>
     );
   }
@@ -77,7 +77,7 @@ export default function AdminDashboard() {
   if (error) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+        <div className="border border-gray-300 text-gray-700 px-6 py-4 bg-white">
           {error}
         </div>
       </div>
@@ -85,26 +85,26 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div className="min-h-screen bg-white">
       {/* Header */}
-      <header className="bg-white shadow-sm">
+      <header className="border-b border-gray-300">
         <div className="flex items-center justify-between px-6 py-4">
-          <div className="flex items-center space-x-4">
-            <h1 className="text-2xl font-bold text-gray-800">Admin Dashboard</h1>
+          <div className="flex items-center">
+            <h1 className="text-2xl font-medium text-black">Admin Dashboard</h1>
           </div>
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center gap-6">
             <span className="text-sm text-gray-600">
               Welcome, {dashboardData?.user?.name}
             </span>
             <Link
               href="/"
-              className="text-blue-600 hover:text-blue-700 text-sm"
+              className="text-gray-700 hover:text-black text-sm font-light"
             >
               View Site
             </Link>
             <button
               onClick={handleLogout}
-              className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
+              className="border border-gray-300 text-gray-700 px-4 py-2 text-sm hover:bg-gray-50"
             >
               Logout
             </button>
@@ -114,72 +114,72 @@ export default function AdminDashboard() {
 
       <div className="flex">
         {/* Sidebar */}
-        <aside className="w-64 bg-white shadow-sm min-h-screen">
-          <nav className="mt-6">
-            <div className="px-4 py-2">
-              <h2 className="text-lg font-semibold text-gray-800">Management</h2>
+        <aside className="w-64 border-r border-gray-300 min-h-screen">
+          <nav className="pt-6">
+            <div className="px-6 pb-4">
+              <h2 className="text-lg font-medium text-black">MANAGEMENT</h2>
             </div>
-            <ul className="mt-4">
+            <ul className="space-y-1">
               <li>
                 <Link
                   href="/admin/dashboard"
-                  className="flex items-center px-4 py-3 text-gray-700 hover:bg-blue-50 hover:text-blue-600 border-r-2 border-blue-600"
+                  className="flex items-center px-6 py-3 text-gray-700 hover:bg-gray-50 border-r-2 border-gray-700"
                 >
-                  <span className="mr-3">📊</span>
+                  <span className="mr-3 text-gray-600">📊</span>
                   Dashboard
                 </Link>
               </li>
               <li>
                 <Link
                   href="/admin/categories"
-                  className="flex items-center px-4 py-3 text-gray-700 hover:bg-blue-50 hover:text-blue-600"
+                  className="flex items-center px-6 py-3 text-gray-700 hover:bg-gray-50"
                 >
-                  <span className="mr-3">📂</span>
+                  <span className="mr-3 text-gray-600">📂</span>
                   Categories
                 </Link>
               </li>
               <li>
                 <Link
                   href="/admin/products"
-                  className="flex items-center px-4 py-3 text-gray-700 hover:bg-blue-50 hover:text-blue-600"
+                  className="flex items-center px-6 py-3 text-gray-700 hover:bg-gray-50"
                 >
-                  <span className="mr-3">📦</span>
+                  <span className="mr-3 text-gray-600">📦</span>
                   Products
                 </Link>
               </li>
               <li>
                 <Link
                   href="/admin/orders"
-                  className="flex items-center px-4 py-3 text-gray-700 hover:bg-blue-50 hover:text-blue-600"
+                  className="flex items-center px-6 py-3 text-gray-700 hover:bg-gray-50"
                 >
-                  <span className="mr-3">🛒</span>
+                  <span className="mr-3 text-gray-600">🛒</span>
                   Orders
                 </Link>
               </li>
               <li>
                 <Link
                   href="/admin/users"
-                  className="flex items-center px-4 py-3 text-gray-700 hover:bg-blue-50 hover:text-blue-600"
+                  className="flex items-center px-6 py-3 text-gray-700 hover:bg-gray-50"
                 >
-                  <span className="mr-3">👥</span>
+                  <span className="mr-3 text-gray-600">👥</span>
                   Users
                 </Link>
               </li>
               <li>
                 <Link
                   href="/admin/admins"
-                  className="flex items-center px-4 py-3 text-gray-700 hover:bg-blue-50 hover:text-blue-600"
+                  className="flex items-center px-6 py-3 text-gray-700 hover:bg-gray-50"
                 >
-                  <span className="mr-3">👨‍💼</span>
+                  <span className="mr-3 text-gray-600">👨‍💼</span>
                   Admins
                 </Link>
               </li>
               <li>
                 <Link
                   href="/admin/profile"
-                  className="flex items-center px-4 py-3 text-gray-700 hover:bg-blue-50 hover:text-blue-600"
+                  className="flex items-center px-6 py-3 text-gray-700 hover:bg-gray-50"
                 >
-                  <span className="mr-3">⚙️</span>
+                  <span className="mr-3 text-gray-600">⚙️</span>
                   Profile
                 </Link>
               </li>
@@ -190,43 +190,43 @@ export default function AdminDashboard() {
         {/* Main Content */}
         <main className="flex-1 p-6">
           {/* Stats Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            <div className="bg-white rounded-lg shadow p-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+            <div className="border border-gray-300 p-6">
               <div className="flex items-center">
-                <div className="p-3 bg-blue-100 rounded-full">
-                  <span className="text-2xl">📦</span>
+                <div className="p-3 border border-gray-300">
+                  <span className="text-2xl text-gray-600">📦</span>
                 </div>
                 <div className="ml-4">
-                  <h3 className="text-sm font-medium text-gray-500">Total Products</h3>
-                  <p className="text-2xl font-bold text-gray-900">
+                  <h3 className="text-sm font-medium text-gray-600">TOTAL PRODUCTS</h3>
+                  <p className="text-2xl font-medium text-black">
                     {dashboardData?.stats?.totalProducts || 0}
                   </p>
                 </div>
               </div>
             </div>
 
-            <div className="bg-white rounded-lg shadow p-6">
+            <div className="border border-gray-300 p-6">
               <div className="flex items-center">
-                <div className="p-3 bg-green-100 rounded-full">
-                  <span className="text-2xl">📂</span>
+                <div className="p-3 border border-gray-300">
+                  <span className="text-2xl text-gray-600">📂</span>
                 </div>
                 <div className="ml-4">
-                  <h3 className="text-sm font-medium text-gray-500">Total Categories</h3>
-                  <p className="text-2xl font-bold text-gray-900">
+                  <h3 className="text-sm font-medium text-gray-600">TOTAL CATEGORIES</h3>
+                  <p className="text-2xl font-medium text-black">
                     {dashboardData?.stats?.totalCategories || 0}
                   </p>
                 </div>
               </div>
             </div>
 
-            <div className="bg-white rounded-lg shadow p-6">
+            <div className="border border-gray-300 p-6">
               <div className="flex items-center">
-                <div className="p-3 bg-yellow-100 rounded-full">
-                  <span className="text-2xl">🛒</span>
+                <div className="p-3 border border-gray-300">
+                  <span className="text-2xl text-gray-600">🛒</span>
                 </div>
                 <div className="ml-4">
-                  <h3 className="text-sm font-medium text-gray-500">Total Orders</h3>
-                  <p className="text-2xl font-bold text-gray-900">
+                  <h3 className="text-sm font-medium text-gray-600">TOTAL ORDERS</h3>
+                  <p className="text-2xl font-medium text-black">
                     {dashboardData?.stats?.totalOrders || 0}
                   </p>
                 </div>
@@ -235,34 +235,34 @@ export default function AdminDashboard() {
           </div>
 
           {/* Quick Actions */}
-          <div className="bg-white rounded-lg shadow mb-8">
+          <div className="border border-gray-300 mb-10">
             <div className="p-6">
-              <h2 className="text-xl font-bold text-gray-800 mb-4">Quick Actions</h2>
+              <h2 className="text-xl font-medium text-black mb-6">QUICK ACTIONS</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 <Link
                   href="/admin/categories?action=add"
-                  className="flex items-center justify-center p-4 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 transition duration-200"
+                  className="flex items-center justify-center p-4 border border-gray-300 hover:bg-gray-50 text-gray-700"
                 >
                   <span className="mr-2">➕</span>
                   Add Category
                 </Link>
                 <Link
                   href="/admin/products?action=add"
-                  className="flex items-center justify-center p-4 bg-green-50 border border-green-200 rounded-lg hover:bg-green-100 transition duration-200"
+                  className="flex items-center justify-center p-4 border border-gray-300 hover:bg-gray-50 text-gray-700"
                 >
                   <span className="mr-2">📦</span>
                   Add Product
                 </Link>
                 <Link
                   href="/admin/orders"
-                  className="flex items-center justify-center p-4 bg-yellow-50 border border-yellow-200 rounded-lg hover:bg-yellow-100 transition duration-200"
+                  className="flex items-center justify-center p-4 border border-gray-300 hover:bg-gray-50 text-gray-700"
                 >
                   <span className="mr-2">📋</span>
                   Manage Orders
                 </Link>
                 <Link
                   href="/admin/admins?action=add"
-                  className="flex items-center justify-center p-4 bg-purple-50 border border-purple-200 rounded-lg hover:bg-purple-100 transition duration-200"
+                  className="flex items-center justify-center p-4 border border-gray-300 hover:bg-gray-50 text-gray-700"
                 >
                   <span className="mr-2">👨‍💼</span>
                   Add Admin
@@ -273,25 +273,25 @@ export default function AdminDashboard() {
 
           {/* Recent Activities */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div className="bg-white rounded-lg shadow">
+            <div className="border border-gray-300">
               <div className="p-6">
-                <h3 className="text-lg font-bold text-gray-800 mb-4">System Overview</h3>
-                <div className="space-y-3">
-                  <div className="flex justify-between items-center p-3 bg-gray-50 rounded">
+                <h3 className="text-lg font-medium text-black mb-6">SYSTEM OVERVIEW</h3>
+                <div className="space-y-4">
+                  <div className="flex justify-between items-center py-3 border-b border-gray-300">
                     <span className="text-sm text-gray-600">Active Categories</span>
-                    <span className="font-semibold">
+                    <span className="font-medium text-black">
                       {dashboardData?.categories?.filter(c => c.isActive)?.length || 0}
                     </span>
                   </div>
-                  <div className="flex justify-between items-center p-3 bg-gray-50 rounded">
+                  <div className="flex justify-between items-center py-3 border-b border-gray-300">
                     <span className="text-sm text-gray-600">Total Categories</span>
-                    <span className="font-semibold">
+                    <span className="font-medium text-black">
                       {dashboardData?.categories?.length || 0}
                     </span>
                   </div>
-                  <div className="flex justify-between items-center p-3 bg-gray-50 rounded">
+                  <div className="flex justify-between items-center py-3">
                     <span className="text-sm text-gray-600">Admin Role</span>
-                    <span className="font-semibold text-blue-600">
+                    <span className="font-medium text-gray-700">
                       {dashboardData?.user?.role}
                     </span>
                   </div>
@@ -299,35 +299,35 @@ export default function AdminDashboard() {
               </div>
             </div>
 
-            <div className="bg-white rounded-lg shadow">
+            <div className="border border-gray-300">
               <div className="p-6">
-                <h3 className="text-lg font-bold text-gray-800 mb-4">Quick Links</h3>
+                <h3 className="text-lg font-medium text-black mb-6">QUICK LINKS</h3>
                 <div className="space-y-3">
                   <Link
                     href="/admin/categories"
-                    className="block p-3 bg-blue-50 rounded hover:bg-blue-100 transition duration-200"
+                    className="block p-4 border border-gray-300 hover:bg-gray-50 text-gray-700"
                   >
                     <div className="flex items-center">
-                      <span className="mr-3">📂</span>
-                      <span className="font-medium">Manage Categories</span>
+                      <span className="mr-3 text-gray-600">📂</span>
+                      <span className="font-light">Manage Categories</span>
                     </div>
                   </Link>
                   <Link
                     href="/admin/products"
-                    className="block p-3 bg-green-50 rounded hover:bg-green-100 transition duration-200"
+                    className="block p-4 border border-gray-300 hover:bg-gray-50 text-gray-700"
                   >
                     <div className="flex items-center">
-                      <span className="mr-3">📦</span>
-                      <span className="font-medium">Manage Products</span>
+                      <span className="mr-3 text-gray-600">📦</span>
+                      <span className="font-light">Manage Products</span>
                     </div>
                   </Link>
                   <Link
                     href="/admin/orders"
-                    className="block p-3 bg-yellow-50 rounded hover:bg-yellow-100 transition duration-200"
+                    className="block p-4 border border-gray-300 hover:bg-gray-50 text-gray-700"
                   >
                     <div className="flex items-center">
-                      <span className="mr-3">🛒</span>
-                      <span className="font-medium">Process Orders</span>
+                      <span className="mr-3 text-gray-600">🛒</span>
+                      <span className="font-light">Process Orders</span>
                     </div>
                   </Link>
                 </div>

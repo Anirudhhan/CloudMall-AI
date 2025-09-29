@@ -288,25 +288,25 @@ export default function AdminProducts() {
   if (loading && products.length === 0) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
+        <div className="animate-spin rounded-full h-32 w-32 border-2 border-gray-300 border-t-gray-700"></div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div className="min-h-screen bg-white">
       {/* Header */}
-      <header className="bg-white shadow-sm">
+      <header className="border-b border-gray-300">
         <div className="flex items-center justify-between px-6 py-4">
-          <div className="flex items-center space-x-4">
-            <Link href="/admin/dashboard" className="text-blue-600 hover:text-blue-700">
+          <div className="flex items-center gap-4">
+            <Link href="/admin/dashboard" className="text-gray-700 hover:text-black font-light">
               ← Back to Dashboard
             </Link>
-            <h1 className="text-2xl font-bold text-gray-800">Product Management</h1>
+            <h1 className="text-2xl font-medium text-black">PRODUCT MANAGEMENT</h1>
           </div>
           <button
             onClick={() => setShowForm(!showForm)}
-            className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+            className="border border-gray-300 text-gray-700 px-4 py-2 hover:bg-gray-50 text-sm"
           >
             {showForm ? "Cancel" : "Add Product"}
           </button>
@@ -316,30 +316,30 @@ export default function AdminProducts() {
       <div className="p-6">
         {/* Messages */}
         {error && (
-          <div className="mb-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+          <div className="mb-4 border border-gray-300 text-gray-700 px-4 py-3 bg-white">
             {error}
           </div>
         )}
         {success && (
-          <div className="mb-4 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded">
+          <div className="mb-4 border border-gray-300 text-gray-700 px-4 py-3 bg-white">
             {success}
           </div>
         )}
 
         {/* Search */}
-        <div className="bg-white rounded-lg shadow mb-6">
+        <div className="border border-gray-300 mb-6">
           <div className="p-4">
-            <form onSubmit={handleSearch} className="flex space-x-4">
+            <form onSubmit={handleSearch} className="flex gap-4">
               <input
                 type="text"
                 placeholder="Search products..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="flex-1 border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="flex-1 border border-gray-300 px-3 py-2 focus:outline-none text-gray-700"
               />
               <button
                 type="submit"
-                className="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700"
+                className="border border-gray-300 text-gray-700 px-6 py-2 hover:bg-gray-50"
               >
                 Search
               </button>
@@ -350,7 +350,7 @@ export default function AdminProducts() {
                     setSearchQuery("");
                     fetchProducts(0, "");
                   }}
-                  className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600"
+                  className="border border-gray-300 text-gray-700 px-4 py-2 hover:bg-gray-50"
                 >
                   Clear
                 </button>
@@ -361,35 +361,35 @@ export default function AdminProducts() {
 
         {/* Add/Edit Form */}
         {showForm && (
-          <div className="bg-white rounded-lg shadow mb-6">
+          <div className="border border-gray-300 mb-6">
             <div className="p-6">
-              <h2 className="text-xl font-bold mb-4">
-                {editingProduct ? "Edit Product" : "Add New Product"}
+              <h2 className="text-xl font-medium mb-6 text-black">
+                {editingProduct ? "EDIT PRODUCT" : "ADD NEW PRODUCT"}
               </h2>
-              <form onSubmit={handleSubmit} className="space-y-4">
+              <form onSubmit={handleSubmit} className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-gray-700 font-medium mb-2">
-                      Product Title *
+                    <label className="block text-gray-700 font-medium mb-2 text-sm">
+                      PRODUCT TITLE *
                     </label>
                     <input
                       type="text"
                       value={formData.title}
                       onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                      className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full border border-gray-300 px-3 py-2 focus:outline-none text-gray-700"
                       placeholder="Enter product title"
                       required
                     />
                   </div>
 
                   <div>
-                    <label className="block text-gray-700 font-medium mb-2">
-                      Category *
+                    <label className="block text-gray-700 font-medium mb-2 text-sm">
+                      CATEGORY *
                     </label>
                     <select
                       value={formData.category}
                       onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                      className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full border border-gray-300 px-3 py-2 focus:outline-none text-gray-700"
                       required
                     >
                       <option value="">Select Category</option>
@@ -403,13 +403,13 @@ export default function AdminProducts() {
                 </div>
 
                 <div>
-                  <label className="block text-gray-700 font-medium mb-2">
-                    Description
+                  <label className="block text-gray-700 font-medium mb-2 text-sm">
+                    DESCRIPTION
                   </label>
                   <textarea
                     value={formData.description}
                     onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                    className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full border border-gray-300 px-3 py-2 focus:outline-none text-gray-700"
                     rows={4}
                     placeholder="Enter product description"
                   />
@@ -417,8 +417,8 @@ export default function AdminProducts() {
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div>
-                    <label className="block text-gray-700 font-medium mb-2">
-                      Price * ($)
+                    <label className="block text-gray-700 font-medium mb-2 text-sm">
+                      PRICE * ($)
                     </label>
                     <input
                       type="number"
@@ -426,30 +426,30 @@ export default function AdminProducts() {
                       min="0"
                       value={formData.price}
                       onChange={(e) => setFormData({ ...formData, price: e.target.value })}
-                      className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full border border-gray-300 px-3 py-2 focus:outline-none text-gray-700"
                       placeholder="0.00"
                       required
                     />
                   </div>
 
                   <div>
-                    <label className="block text-gray-700 font-medium mb-2">
-                      Stock *
+                    <label className="block text-gray-700 font-medium mb-2 text-sm">
+                      STOCK *
                     </label>
                     <input
                       type="number"
                       min="0"
                       value={formData.stock}
                       onChange={(e) => setFormData({ ...formData, stock: e.target.value })}
-                      className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full border border-gray-300 px-3 py-2 focus:outline-none text-gray-700"
                       placeholder="0"
                       required
                     />
                   </div>
 
                   <div>
-                    <label className="block text-gray-700 font-medium mb-2">
-                      Discount (%)
+                    <label className="block text-gray-700 font-medium mb-2 text-sm">
+                      DISCOUNT (%)
                     </label>
                     <input
                       type="number"
@@ -457,57 +457,57 @@ export default function AdminProducts() {
                       max="100"
                       value={formData.discount}
                       onChange={(e) => setFormData({ ...formData, discount: e.target.value })}
-                      className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full border border-gray-300 px-3 py-2 focus:outline-none text-gray-700"
                       placeholder="0"
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-gray-700 font-medium mb-2">
-                    Product Image
+                  <label className="block text-gray-700 font-medium mb-2 text-sm">
+                    PRODUCT IMAGE
                   </label>
                   {imagePreview && (
                     <img
                       src={imagePreview}
                       alt="Preview"
-                      className="w-32 h-32 object-cover rounded mb-2"
+                      className="w-32 h-32 object-cover border border-gray-300 mb-2"
                     />
                   )}
                   <input
                     type="file"
                     accept="image/*"
                     onChange={handleImageChange}
-                    className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                    className="block w-full text-sm text-gray-700 file:mr-4 file:py-2 file:px-4 file:border file:border-gray-300 file:text-sm file:text-gray-700 file:bg-white hover:file:bg-gray-50"
                   />
-                  <p className="text-sm text-gray-500 mt-1">Max size: 5MB (JPEG, PNG, GIF)</p>
+                  <p className="text-xs text-gray-600 mt-1">Max size: 5MB (JPEG, PNG, GIF)</p>
                 </div>
 
-                <div className="flex items-center">
+                <div className="flex items-center gap-2">
                   <input
                     type="checkbox"
                     id="isActive"
                     checked={formData.isActive}
                     onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
-                    className="mr-2"
+                    className="w-3"
                   />
-                  <label htmlFor="isActive" className="text-gray-700">
+                  <label htmlFor="isActive" className="text-gray-700 text-sm">
                     Active
                   </label>
                 </div>
 
-                <div className="flex space-x-4">
+                <div className="flex gap-4">
                   <button
                     type="submit"
                     disabled={loading}
-                    className="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700 disabled:bg-blue-400"
+                    className="border border-gray-300 text-gray-700 px-6 py-2 hover:bg-gray-50 disabled:bg-gray-100"
                   >
                     {loading ? "Saving..." : editingProduct ? "Update" : "Create"}
                   </button>
                   <button
                     type="button"
                     onClick={resetForm}
-                    className="bg-gray-500 text-white px-6 py-2 rounded hover:bg-gray-600"
+                    className="border border-gray-300 text-gray-700 px-6 py-2 hover:bg-gray-50"
                   >
                     Cancel
                   </button>
@@ -518,92 +518,84 @@ export default function AdminProducts() {
         )}
 
         {/* Products Table */}
-        <div className="bg-white rounded-lg shadow">
+        <div className="border border-gray-300">
           <div className="p-6">
-            <h2 className="text-xl font-bold mb-4">All Products</h2>
+            <h2 className="text-xl font-medium mb-6 text-black">ALL PRODUCTS</h2>
 
             {products.length === 0 ? (
-              <div className="text-center py-8 text-gray-500">
+              <div className="text-center py-8 text-gray-600">
                 {searchQuery ? "No products found matching your search." : "No products found. Create your first product!"}
               </div>
             ) : (
               <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
+                <table className="min-w-full">
+                  <thead className="border-b border-gray-300">
                     <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
                         ID
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Title
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
+                        TITLE
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Category
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
+                        CATEGORY
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Price
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
+                        PRICE
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Stock
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
+                        STOCK
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Status
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
+                        STATUS
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Actions
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
+                        ACTIONS
                       </th>
                     </tr>
                   </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
+                  <tbody className="divide-y divide-gray-300">
                     {products.map((product) => (
                       <tr key={product.id} className="hover:bg-gray-50">
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
                           {product.id}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-black">
                           <div className="max-w-xs truncate" title={product.title}>
                             {product.title}
                           </div>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
                           {product.category}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
                           <div>
-                            <span className="font-semibold">${product.discountPrice.toFixed(2)}</span>
+                            <span className="font-medium">${product.discountPrice.toFixed(2)}</span>
                             {product.discount > 0 && (
-                              <div className="text-xs text-gray-500 line-through">
+                              <div className="text-xs text-gray-600 line-through">
                                 ${product.price.toFixed(2)}
                               </div>
                             )}
                           </div>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          <span className={product.stock > 0 ? "text-green-600" : "text-red-600"}>
-                            {product.stock}
-                          </span>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                          {product.stock}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <span
-                            className={`px-2 py-1 text-xs font-semibold rounded-full ${
-                              product.isActive
-                                ? "bg-green-100 text-green-800"
-                                : "bg-red-100 text-red-800"
-                            }`}
-                          >
+                          <span className={`text-xs ${product.isActive ? "text-gray-700" : "text-gray-600"}`}>
                             {product.isActive ? "Active" : "Inactive"}
                           </span>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-light space-x-2">
                           <button
                             onClick={() => handleEdit(product.id)}
-                            className="text-blue-600 hover:text-blue-700"
+                            className="text-gray-700 hover:text-black"
                           >
                             Edit
                           </button>
                           <button
                             onClick={() => handleDelete(product.id)}
-                            className="text-red-600 hover:text-red-700"
+                            className="text-gray-700 hover:text-black"
                           >
                             Delete
                           </button>
@@ -617,8 +609,8 @@ export default function AdminProducts() {
 
             {/* Pagination */}
             {pagination && pagination.totalPages > 1 && (
-              <div className="flex items-center justify-between mt-6">
-                <div className="text-sm text-gray-700">
+              <div className="flex items-center justify-between mt-6 pt-6 border-t border-gray-300">
+                <div className="text-sm text-gray-600">
                   Showing {pagination.currentPage * pagination.pageSize + 1} to{" "}
                   {Math.min(
                     (pagination.currentPage + 1) * pagination.pageSize,
@@ -626,26 +618,26 @@ export default function AdminProducts() {
                   )}{" "}
                   of {pagination.totalElements} results
                 </div>
-                <div className="flex space-x-2">
+                <div className="flex gap-2">
                   <Link
                     href={`/admin/products?page=${pagination.currentPage - 1}${searchQuery ? `&search=${searchQuery}` : ''}`}
-                    className={`px-3 py-1 rounded ${
+                    className={`px-3 py-1 border border-gray-300 text-sm ${
                       pagination.hasPrevious
-                        ? "bg-blue-600 text-white hover:bg-blue-700"
-                        : "bg-gray-300 text-gray-500 cursor-not-allowed"
+                        ? "text-gray-700 hover:bg-gray-50"
+                        : "text-gray-400 cursor-not-allowed"
                     }`}
                   >
                     Previous
                   </Link>
-                  <span className="px-3 py-1 bg-gray-100 rounded">
+                  <span className="px-3 py-1 border border-gray-300 text-sm text-gray-700">
                     Page {pagination.currentPage + 1} of {pagination.totalPages}
                   </span>
                   <Link
                     href={`/admin/products?page=${pagination.currentPage + 1}${searchQuery ? `&search=${searchQuery}` : ''}`}
-                    className={`px-3 py-1 rounded ${
+                    className={`px-3 py-1 border border-gray-300 text-sm ${
                       pagination.hasNext
-                        ? "bg-blue-600 text-white hover:bg-blue-700"
-                        : "bg-gray-300 text-gray-500 cursor-not-allowed"
+                        ? "text-gray-700 hover:bg-gray-50"
+                        : "text-gray-400 cursor-not-allowed"
                     }`}
                   >
                     Next
