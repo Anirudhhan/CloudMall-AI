@@ -8,7 +8,7 @@ import Image from "next/image";
 interface Category {
   id: number;
   name: string;
-  image_name: string;
+  imageName: string;
   isActive: boolean;
 }
 
@@ -45,6 +45,8 @@ export default function HomePage() {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const router = useRouter();
+
+  console.log(homeData.categories);
 
   const API_BASE =
     process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8080";
@@ -85,7 +87,7 @@ export default function HomePage() {
 
   const handleAddToCart = async (productId: number) => {
     if (!userData?.user) {
-      router.push("/login");
+      router.push("/sign-in");
       return;
     }
 
@@ -191,13 +193,13 @@ export default function HomePage() {
               ) : (
                 <div className="flex items-center space-x-4">
                   <Link
-                    href="/login"
+                    href="/sign-in"
                     className="text-gray-700 hover:text-black"
                   >
                     Login
                   </Link>
                   <Link
-                    href="/register"
+                    href="/sign-up"
                     className="border border-gray-300 text-gray-700 px-4 py-2 hover:bg-gray-50"
                   >
                     Sign Up
@@ -240,7 +242,7 @@ export default function HomePage() {
               >
                 <div className="border border-gray-300 p-6 mb-4 group-hover:bg-gray-50">
                       <Image
-                        src={`/categories/cat-phones.jpeg`} // TODO: HAVE TO FIX THE CAT IMAGE
+                        src={`/categories/${category.imageName}`}
                         alt={category.name}
                         width={900}
                         height={500}
