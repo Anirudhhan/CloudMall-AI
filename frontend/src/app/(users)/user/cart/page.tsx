@@ -134,7 +134,7 @@ export default function CartPage() {
               Looks like you haven't added anything to your cart yet
             </p>
             <Link
-              href="/products"
+              href="/product"
               className="inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-blue-600 to-blue-700 text-white font-semibold rounded-xl hover:from-blue-700 hover:to-blue-800 transition-all shadow-lg hover:shadow-xl"
             >
               Start Shopping
@@ -301,7 +301,7 @@ export default function CartPage() {
               </button>
 
               <Link
-                href="/products"
+                href="/product"
                 className="block w-full py-3 text-center border-2 border-blue-600 text-blue-600 font-semibold rounded-xl hover:bg-blue-50 transition-colors"
               >
                 Continue Shopping

@@ -206,14 +206,14 @@ export default function ProductsSearchPage() {
                         placeholder="Min"
                         value={priceRange.min}
                         onChange={(e) => setPriceRange({ ...priceRange, min: Number(e.target.value) })}
-                        className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm"
+                        className="w-full px-3 py-2 border border-slate-300 text-black rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm"
                       />
                       <input
                         type="number"
                         placeholder="Max"
                         value={priceRange.max}
                         onChange={(e) => setPriceRange({ ...priceRange, max: Number(e.target.value) })}
-                        className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm"
+                        className="w-full px-3 py-2 border border-slate-300 rounded-lg text-black focus:ring-2 focus:ring-blue-500 outline-none text-sm"
                       />
                     </div>
                     <button
@@ -311,7 +311,7 @@ export default function ProductsSearchPage() {
                     <select
                       value={sortBy}
                       onChange={(e) => setSortBy(e.target.value)}
-                      className="px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm"
+                      className="px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 text-black focus:ring-blue-500 outline-none text-sm"
                     >
                       <option value="">Relevance</option>
                       <option value="price-low">Price: Low to High</option>

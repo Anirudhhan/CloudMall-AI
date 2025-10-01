@@ -278,7 +278,7 @@ export default function ProductDetailPage() {
                     >
                       <Minus className="w-5 h-5 text-slate-600" />
                     </button>
-                    <span className="w-16 text-center font-semibold text-lg">{quantity}</span>
+                    <span className="w-16 text-center font-semibold text-lg text-black">{quantity}</span>
                     <button
                       onClick={() => setQuantity(Math.min(product.stock, quantity + 1))}
                       className="p-3 hover:bg-slate-50 transition-colors"
