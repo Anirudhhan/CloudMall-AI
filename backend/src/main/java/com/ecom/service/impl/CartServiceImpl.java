@@ -82,7 +82,7 @@ public class CartServiceImpl implements CartService {
 		Cart cart = cartRepository.findById(cid).get();
 		int updateQuantity;
 
-		if (sy.equalsIgnoreCase("de")) {
+		if (sy.equalsIgnoreCase("dec")) {
 			updateQuantity = cart.getQuantity() - 1;
 
 			if (updateQuantity <= 0) {
@@ -98,6 +98,11 @@ public class CartServiceImpl implements CartService {
 			cartRepository.save(cart);
 		}
 
+	}
+
+	@Override
+	public void removeCartItem(Integer cartId) {
+		cartRepository.deleteById(cartId);
 	}
 
 }

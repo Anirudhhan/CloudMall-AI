@@ -166,7 +166,7 @@ public class UserController {
 
         try {
             // Assuming you have a method to remove cart item
-            // cartService.removeCartItem(cartId);
+            cartService.removeCartItem(cartId);
             response.put("success", true);
             response.put("message", "Item removed from cart successfully");
             return ResponseEntity.ok(response);
