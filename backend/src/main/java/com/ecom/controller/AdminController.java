@@ -100,7 +100,8 @@ public class AdminController {
 
     // ========== CATEGORY MANAGEMENT ==========
 
-    @GetMapping("/categories")
+    @GetMapping("/ca" +
+            "tegories")
     public ResponseEntity<Map<String, Object>> getCategories(
             @RequestParam(name = "pageNo", defaultValue = "0") Integer pageNo,
             @RequestParam(name = "pageSize", defaultValue = "10") Integer pageSize) {

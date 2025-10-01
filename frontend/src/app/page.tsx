@@ -42,8 +42,8 @@ export default function HomePage() {
     products: [],
   });
   const [userData, setUserData] = useState<UserData | null>(null);
+
   const [loading, setLoading] = useState(true);
-  const [searchQuery, setSearchQuery] = useState("");
   const router = useRouter();
 
   console.log(homeData.categories);
@@ -55,10 +55,35 @@ export default function HomePage() {
     const fetchData = async () => {
       try {
         // Fetch homepage data
-        const homeResponse = await axios.get(`${API_BASE}/api/home`);
+        const homePromise = axios.get(`${API_BASE}/api/home`);
+
+        // Fetch user data
+        const userPromise = axios.get(`${API_BASE}/api/user-info`, {
+          withCredentials: true,
+        });
+
+        // Run both requests in parallel
+        const [homeResponse, userResponse] = await Promise.all([
+          homePromise,
+          userPromise,
+        ]);
+
+        // Set homepage data
         setHomeData(homeResponse.data);
+
+        // Set user data
+        if (userResponse.status === 200) {
+          setUserData({
+            user: userResponse.data.user,
+            cartCount: userResponse.data.countCart || 0,
+            categories: userResponse.data.categories || [],
+          });
+        } else {
+          setUserData(null);
+        }
       } catch (error) {
-        console.error("Error fetching homepage data:", error);
+        console.error("Error fetching data:", error);
+        setUserData(null);
       } finally {
         setLoading(false);
       }
@@ -106,11 +131,12 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen bg-white">
-
       {/* Hero Section */}
       <section className="border-b border-gray-300 py-20">
         <div className="container mx-auto px-4 text-center">
-          <h1 className="text-5xl font-medium mb-4 text-black">Welcome to CloudMall</h1>
+          <h1 className="text-5xl font-medium mb-4 text-black">
+            Welcome to CloudMall
+          </h1>
           <p className="text-xl mb-8 text-gray-600">
             Discover amazing products at unbeatable prices
           </p>
@@ -137,13 +163,13 @@ export default function HomePage() {
                 className="group text-center"
               >
                 <div className="border border-gray-300 p-6 mb-4 group-hover:bg-gray-50">
-                      <Image
-                        src={`/categories/${category.imageName}`}
-                        alt={category.name}
-                        width={900}
-                        height={500}
-                        className="object-contain"
-                      />
+                  <Image
+                    src={`/categories/${category.imageName}`}
+                    alt={category.name}
+                    width={900}
+                    height={500}
+                    className="object-contain"
+                  />
                 </div>
                 <h3 className="font-light text-gray-700 group-hover:text-black">
                   {category.name}
