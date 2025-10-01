@@ -44,7 +44,7 @@ export default function AdminDashboard() {
         console.error("Error fetching dashboard data:", error);
         if (error.response?.status === 401 || error.response?.status === 403) {
           setError("Access denied. Admin privileges required.");
-          setTimeout(() => router.push("/login"), 2000);
+          setTimeout(() => router.push("/sign-in"), 2000);
         } else {
           setError("Failed to load dashboard data");
         }

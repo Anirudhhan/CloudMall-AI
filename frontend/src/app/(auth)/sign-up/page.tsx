@@ -145,7 +145,7 @@ export default function SignUpPage() {
       if (response.data.success) {
         // Registration successful
         alert("Registration successful! Please login to continue.");
-        router.push("/login");
+        router.push("/sign-in");
       } else {
         setError(response.data.message || "Registration failed");
       }

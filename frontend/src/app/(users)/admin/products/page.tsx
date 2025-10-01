@@ -100,7 +100,7 @@ export default function AdminProducts() {
       console.error("Error fetching products:", error);
       if (error.response?.status === 401 || error.response?.status === 403) {
         setError("Access denied. Admin privileges required.");
-        setTimeout(() => router.push("/login"), 2000);
+        setTimeout(() => router.push("/sign-in"), 2000);
       } else {
         setError("Failed to load products");
       }
@@ -418,7 +418,7 @@ export default function AdminProducts() {
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div>
                     <label className="block text-gray-700 font-medium mb-2 text-sm">
-                      PRICE * ($)
+                      PRICE * (₹)
                     </label>
                     <input
                       type="number"
@@ -570,10 +570,10 @@ export default function AdminProducts() {
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
                           <div>
-                            <span className="font-medium">${product.discountPrice.toFixed(2)}</span>
+                            <span className="font-medium">₹{product.discountPrice.toFixed(2)}</span>
                             {product.discount > 0 && (
                               <div className="text-xs text-gray-600 line-through">
-                                ${product.price.toFixed(2)}
+                                ₹{product.price.toFixed(2)}
                               </div>
                             )}
                           </div>

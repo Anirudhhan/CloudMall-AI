@@ -51,6 +51,10 @@ export default function Navbar() {
       router.push(`/product?search=${encodeURIComponent(searchQuery.trim())}`);
       setSearchQuery('');
     }
+
+    setTimeout(() => {
+      window.location.reload();
+    }, 1000); 
   };
 
   const handleLogout = async () => {
@@ -90,8 +94,8 @@ export default function Navbar() {
           <div className="flex items-center justify-between h-16">
             <Link href="/" className="flex items-center gap-2 group">
               <div className="text-white font-bold text-2xl flex items-end">
-                <span>Shop</span>
-                <span className="text-yellow-300">Plus</span>
+                <span>Cloud</span>
+                <span className="text-yellow-300">Mall</span>
               </div>
               <div className="text-xs text-yellow-300 italic font-semibold bg-yellow-300/20 px-2 py-0.5 rounded">
                 Premium

@@ -73,9 +73,11 @@ export default function ProductsSearchPage() {
       params.append('pageNo', currentPage.toString());
       params.append('pageSize', '12');
 
-      const response = await fetch(`http://localhost:8080/api/product?${params}`, {
+      const response = await fetch(`http://localhost:8080/api/products?${params}`, {
         credentials: 'include'
       });
+
+      console.log(response);
       
       if (response.ok) {
         const data = await response.json();

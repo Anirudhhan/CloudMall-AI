@@ -50,7 +50,7 @@ export default function UserDashboard() {
         });
         
         if (!response.data.authenticated) {
-          router.push("/login");
+          router.push("/sign-in");
           return;
         }
 
@@ -73,7 +73,7 @@ export default function UserDashboard() {
         console.error("Error fetching dashboard data:", error);
         if (error.response?.status === 401 || error.response?.status === 403) {
           setError("Please login to access your dashboard");
-          setTimeout(() => router.push("/login"), 2000);
+          setTimeout(() => router.push("/sign-in"), 2000);
         } else {
           setError("Failed to load dashboard data");
         }
@@ -90,10 +90,10 @@ export default function UserDashboard() {
       await axios.post(`${API_BASE}/api/logout`, {}, { withCredentials: true });
       localStorage.removeItem("user");
       localStorage.removeItem("cartCount");
-      router.push("/login");
+      router.push("/sign-in");
     } catch (error) {
       console.error("Logout error:", error);
-      router.push("/login");
+      router.push("/sign-in");
     }
   };
 

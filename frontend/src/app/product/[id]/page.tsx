@@ -79,7 +79,7 @@ export default function ProductDetailPage() {
         setCartAdded(true);
         setTimeout(() => setCartAdded(false), 2000);
       } else if (response.status === 401) {
-        router.push('/login');
+        router.push('/sign-in');
       }
     } catch (error) {
       console.error('Error adding to cart:', error);
@@ -99,7 +99,7 @@ export default function ProductDetailPage() {
       if (response.ok) {
         router.push('/user/cart');
       } else if (response.status === 401) {
-        router.push('/login');
+        router.push('/sign-in');
       }
     } catch (error) {
       console.error('Error:', error);
