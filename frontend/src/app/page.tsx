@@ -57,17 +57,6 @@ export default function HomePage() {
         // Fetch homepage data
         const homeResponse = await axios.get(`${API_BASE}/api/home`);
         setHomeData(homeResponse.data);
-
-        // Fetch user info if logged in
-        try {
-          const userResponse = await axios.get(`${API_BASE}/api/user-info`, {
-            withCredentials: true,
-          });
-          setUserData(userResponse.data);
-        } catch (error) {
-          // User not logged in - this is fine
-          console.log("User not logged in");
-        }
       } catch (error) {
         console.error("Error fetching homepage data:", error);
       } finally {
@@ -77,13 +66,6 @@ export default function HomePage() {
 
     fetchData();
   }, [API_BASE]);
-
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (searchQuery.trim()) {
-      router.push(`/products?search=${encodeURIComponent(searchQuery.trim())}`);
-    }
-  };
 
   const handleAddToCart = async (productId: number) => {
     if (!userData?.user) {
@@ -124,92 +106,6 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen bg-white">
-      {/* Header */}
-      <header className="border-b border-gray-300">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            {/* Logo */}
-            <div className="flex items-center">
-              <Link href="/" className="text-2xl font-medium text-black">
-                CloudMall
-              </Link>
-            </div>
-
-            {/* Search Bar */}
-            <form onSubmit={handleSearch} className="flex-1 max-w-lg mx-8">
-              <div className="relative">
-                <input
-                  type="text"
-                  placeholder="Search products..."
-                  className="w-full px-4 py-2 border border-gray-300 focus:outline-none text-gray-700"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                />
-                <button
-                  type="submit"
-                  className="absolute right-2 top-1/2 transform -translate-y-1/2 border border-gray-300 text-gray-700 px-4 py-1 hover:bg-gray-50"
-                >
-                  Search
-                </button>
-              </div>
-            </form>
-
-            {/* Navigation */}
-            <nav className="flex items-center space-x-4">
-              <Link
-                href="/products"
-                className="text-gray-700 hover:text-black"
-              >
-                Products
-              </Link>
-
-              {userData?.user ? (
-                <div className="flex items-center space-x-4">
-                  <Link
-                    href="/user/cart"
-                    className="relative text-gray-700 hover:text-black"
-                  >
-                    Cart
-                    {userData.cartCount > 0 && (
-                      <span className="absolute -top-2 -right-2 bg-black text-white text-xs h-5 w-5 flex items-center justify-center">
-                        {userData.cartCount}
-                      </span>
-                    )}
-                  </Link>
-                  <Link
-                    href={
-                      userData.user.role === "ROLE_ADMIN"
-                        ? "/admin/dashboard"
-                        : "/user/dashboard"
-                    }
-                    className="text-gray-700 hover:text-black"
-                  >
-                    Dashboard
-                  </Link>
-                  <span className="text-sm text-gray-600">
-                    Hello, {userData.user.name}
-                  </span>
-                </div>
-              ) : (
-                <div className="flex items-center space-x-4">
-                  <Link
-                    href="/sign-in"
-                    className="text-gray-700 hover:text-black"
-                  >
-                    Login
-                  </Link>
-                  <Link
-                    href="/sign-up"
-                    className="border border-gray-300 text-gray-700 px-4 py-2 hover:bg-gray-50"
-                  >
-                    Sign Up
-                  </Link>
-                </div>
-              )}
-            </nav>
-          </div>
-        </div>
-      </header>
 
       {/* Hero Section */}
       <section className="border-b border-gray-300 py-20">
