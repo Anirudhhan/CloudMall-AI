@@ -122,7 +122,7 @@ export default function AdminProducts() {
         return;
       }
 
-      const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
+      const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
       if (!validTypes.includes(file.type)) {
         setError("Please select a valid image file (JPEG, PNG, GIF)");
         return;
@@ -480,7 +480,7 @@ export default function AdminProducts() {
                     onChange={handleImageChange}
                     className="block w-full text-sm text-gray-700 file:mr-4 file:py-2 file:px-4 file:border file:border-gray-300 file:text-sm file:text-gray-700 file:bg-white hover:file:bg-gray-50"
                   />
-                  <p className="text-xs text-gray-600 mt-1">Max size: 5MB (JPEG, PNG, GIF)</p>
+                  <p className="text-xs text-gray-600 mt-1">Max size: 5MB (JPEG, PNG, GIF, WEBP)</p>
                 </div>
 
                 <div className="flex items-center gap-2">

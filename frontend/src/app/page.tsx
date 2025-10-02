@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
-import { ShoppingCart, ArrowRight, Star, TrendingUp, Zap, Shield, Truck, Award } from "lucide-react";
+import { ShoppingCart, ArrowRight, Check, X } from "lucide-react";
 
 interface Category {
   id: number;
@@ -36,6 +36,11 @@ interface UserData {
   categories: Category[];
 }
 
+interface Toast {
+  message: string;
+  type: "success" | "error";
+}
+
 export default function HomePage() {
   const [homeData, setHomeData] = useState<HomeData>({
     categories: [],
@@ -44,13 +49,24 @@ export default function HomePage() {
   const [userData, setUserData] = useState<UserData | null>(null);
   const [loading, setLoading] = useState(true);
   const [addingToCart, setAddingToCart] = useState<number | null>(null);
+  const [toast, setToast] = useState<Toast | null>(null);
   const router = useRouter();
 
-  const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8080";
+  const API_BASE =
+    process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8080";
 
   useEffect(() => {
     fetchData();
   }, []);
+
+  useEffect(() => {
+    if (toast) {
+      const timer = setTimeout(() => {
+        setToast(null);
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [toast]);
 
   const fetchData = async () => {
     try {
@@ -60,7 +76,7 @@ export default function HomePage() {
 
       try {
         const userResponse = await fetch(`${API_BASE}/api/user-info`, {
-          credentials: 'include',
+          credentials: "include",
         });
         if (userResponse.ok) {
           const userData = await userResponse.json();
@@ -80,6 +96,10 @@ export default function HomePage() {
     }
   };
 
+  const showToast = (message: string, type: "success" | "error") => {
+    setToast({ message, type });
+  };
+
   const handleAddToCart = async (productId: number) => {
     if (!userData?.user) {
       router.push("/sign-in");
@@ -88,28 +108,26 @@ export default function HomePage() {
 
     setAddingToCart(productId);
     try {
-      const response = await fetch(`${API_BASE}/api/user/cart?productId=${productId}`, {
-        method: 'POST',
-        credentials: 'include',
-      });
+      const response = await fetch(
+        `${API_BASE}/api/user/cart?productId=${productId}`,
+        {
+          method: "POST",
+          credentials: "include",
+        }
+      );
 
       if (response.ok) {
         const data = await response.json();
         setUserData((prev) =>
           prev ? { ...prev, cartCount: data.cartCount } : null
         );
-        
-        const button = document.getElementById(`cart-btn-${productId}`);
-        if (button) {
-          button.textContent = "Added!";
-          setTimeout(() => {
-            button.textContent = "Add to Cart";
-          }, 2000);
-        }
+        showToast("PRODUCT ADDED TO CART", "success");
+      } else {
+        showToast("FAILED TO ADD TO CART", "error");
       }
     } catch (error) {
       console.error("Error adding to cart:", error);
-      alert("Failed to add product to cart");
+      showToast("ERROR ADDING TO CART", "error");
     } finally {
       setAddingToCart(null);
     }
@@ -117,101 +135,77 @@ export default function HomePage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-slate-100">
-        <div className="animate-spin rounded-full h-16 w-16 border-4 border-blue-600 border-t-transparent"></div>
+      <div className="min-h-screen flex items-center justify-center bg-white">
+        <div className="animate-spin rounded-full h-12 w-12 border-4 border-black border-t-transparent"></div>
       </div>
     );
   }
 
   const featuredProducts = homeData.products.slice(0, 8);
-  const trendingProducts = homeData.products.filter(p => p.discount > 20).slice(0, 4);
+  const trendingProducts = homeData.products
+    .filter((p) => p.discount > 20)
+    .slice(0, 4);
 
   return (
     <div className="min-h-screen bg-white">
-      {/* Hero Section */}
-      <section className="relative bg-gradient-to-br from-blue-600 via-blue-700 to-purple-700 text-white py-20 overflow-hidden">
-        <div className="absolute inset-0 bg-black opacity-10"></div>
-        <div className="container mx-auto px-4 relative z-10">
-          <div className="max-w-3xl">
-            <div className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-sm px-4 py-2 rounded-full mb-6">
-              <Zap className="w-4 h-4 text-yellow-300" />
-              <span className="text-sm font-semibold">Welcome to CloudMall</span>
-            </div>
-            <h1 className="text-5xl md:text-6xl font-bold mb-6 leading-tight">
-              Discover Amazing Products at Unbeatable Prices
-            </h1>
-            <p className="text-xl mb-8 text-blue-100">
-              Shop the latest trends with exclusive deals and fast delivery
-            </p>
-            <div className="flex gap-4">
-              <Link
-                href="/product"
-                className="inline-flex items-center gap-2 bg-white text-blue-600 px-8 py-4 rounded-xl font-semibold hover:bg-blue-50 transition-all shadow-xl"
-              >
-                Shop Now
-                <ArrowRight className="w-5 h-5" />
-              </Link>
-              <Link
-                href="/product?category=smart%20phone"
-                className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm border-2 border-white text-white px-8 py-4 rounded-xl font-semibold hover:bg-white/20 transition-all"
-              >
-                Explore Categories
-              </Link>
-            </div>
+      {/* Toast Notification */}
+      {toast && (
+        <div className="fixed top-6 right-6 z-50 animate-slide-in">
+          <div
+            className={`flex items-center gap-3 px-6 py-4 shadow-lg border-2 ${
+              toast.type === "success"
+                ? "bg-white border-black"
+                : "bg-red-50 border-red-600"
+            }`}
+          >
+            {toast.type === "success" ? (
+              <Check className="w-5 h-5 text-black" />
+            ) : (
+              <X className="w-5 h-5 text-red-600" />
+            )}
+            <span
+              className={`font-bold uppercase tracking-wider text-sm ${
+                toast.type === "success" ? "text-black" : "text-red-600"
+              }`}
+            >
+              {toast.message}
+            </span>
+            <button onClick={() => setToast(null)} className="ml-2">
+              <X className="w-4 h-4" />
+            </button>
           </div>
         </div>
-      </section>
+      )}
 
-      {/* Features Bar */}
-      <section className="bg-slate-50 border-y border-slate-200 py-8">
+      {/* Hero Section */}
+      <section
+        className="relative bg-cover bg-center bg-no-repeat text-white py-72 overflow-hidden"
+        style={{ backgroundImage: 'url("/banner.webp")' }} // use your full image
+      >
         <div className="container mx-auto px-4">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
-                <Truck className="w-6 h-6 text-blue-600" />
-              </div>
-              <div>
-                <p className="font-semibold text-slate-900">Free Delivery</p>
-                <p className="text-sm text-slate-600">On orders over ₹500</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
-                <Shield className="w-6 h-6 text-green-600" />
-              </div>
-              <div>
-                <p className="font-semibold text-slate-900">Secure Payment</p>
-                <p className="text-sm text-slate-600">100% protected</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center">
-                <Award className="w-6 h-6 text-orange-600" />
-              </div>
-              <div>
-                <p className="font-semibold text-slate-900">Best Quality</p>
-                <p className="text-sm text-slate-600">Premium products</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center">
-                <TrendingUp className="w-6 h-6 text-purple-600" />
-              </div>
-              <div>
-                <p className="font-semibold text-slate-900">Best Deals</p>
-                <p className="text-sm text-slate-600">Unbeatable prices</p>
-              </div>
+          <div className="flex justify-end">
+            <div className="max-w-lg text-left text-white">
+              <h1 className="text-5xl font-bold mb-4">CLOUDMALL.</h1>
+              <p className="text-lg mb-6">Functional. Modular. 2k25</p>
+              <a
+                href="/product"
+                className="inline-flex items-center gap-2 bg-white text-black px-2 py-2 font-bold hover:bg-gray-100 transition-colors uppercase tracking-widest text-sm"
+              >
+                Shop Now <ArrowRight className="w-5 h-5" />
+              </a>
             </div>
           </div>
         </div>
       </section>
 
       {/* Categories Section */}
-      <section className="py-16 bg-white">
+      <section className="py-20 bg-white">
         <div className="container mx-auto px-4">
-          <div className="text-center mb-12">
-            <h2 className="text-4xl font-bold text-slate-900 mb-3">Shop by Category</h2>
-            <p className="text-lg text-slate-600">Explore our wide range of products</p>
+          <div className="text-center mb-16">
+            <h2 className="text-4xl font-bold text-black mb-3 uppercase tracking-widest">
+              SHOP BY CATEGORY
+            </h2>
+            <div className="w-20 h-1 bg-black mx-auto"></div>
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-6">
             {homeData.categories.map((category) => (
@@ -220,16 +214,16 @@ export default function HomePage() {
                 href={`/product?category=${encodeURIComponent(category.name)}`}
                 className="group"
               >
-                <div className="bg-white border-2 border-slate-200 rounded-xl p-6 hover:border-blue-500 hover:shadow-xl transition-all duration-300">
-                  <div className="aspect-square relative mb-4 overflow-hidden rounded-lg bg-slate-50">
+                <div className="bg-white border border-gray-200 p-6 hover:border-black transition-all duration-300">
+                  <div className="aspect-square relative mb-4 overflow-hidden bg-gray-50">
                     <Image
                       src={`/categories/${category.imageName}`}
                       alt={category.name}
                       fill
-                      className="object-contain group-hover:scale-110 transition-transform duration-300"
+                      className="object-contain group-hover:scale-105 transition-transform duration-500"
                     />
                   </div>
-                  <h3 className="font-semibold text-slate-900 text-center group-hover:text-blue-600 transition-colors">
+                  <h3 className="font-bold text-black text-center uppercase tracking-wide text-sm group-hover:underline">
                     {category.name}
                   </h3>
                 </div>
@@ -241,18 +235,20 @@ export default function HomePage() {
 
       {/* Trending Products */}
       {trendingProducts.length > 0 && (
-        <section className="py-16 bg-gradient-to-br from-orange-50 to-red-50">
+        <section className="py-20 bg-gray-50">
           <div className="container mx-auto px-4">
-            <div className="flex items-center justify-between mb-12">
+            <div className="flex items-center justify-between mb-16">
               <div>
-                <div className="flex items-center gap-2 mb-2">
-                  <TrendingUp className="w-6 h-6 text-orange-600" />
-                  <h2 className="text-4xl font-bold text-slate-900">Hot Deals</h2>
-                </div>
-                <p className="text-lg text-slate-600">Limited time offers - Don't miss out!</p>
+                <h2 className="text-4xl font-bold text-black uppercase tracking-widest">
+                  HOT DEALS
+                </h2>
+                <div className="w-20 h-1 bg-black mt-3"></div>
               </div>
-              <Link href="/product" className="text-blue-600 hover:text-blue-700 font-semibold flex items-center gap-2">
-                View All
+              <Link
+                href="/product"
+                className="text-black hover:underline font-bold flex items-center gap-2 uppercase tracking-wider text-sm"
+              >
+                VIEW ALL
                 <ArrowRight className="w-5 h-5" />
               </Link>
             </div>
@@ -260,41 +256,48 @@ export default function HomePage() {
               {trendingProducts.map((product) => (
                 <div
                   key={product.id}
-                  className="group bg-white rounded-xl shadow-md hover:shadow-2xl transition-all duration-300 overflow-hidden"
+                  className="group bg-white border border-gray-200 hover:border-black transition-all duration-300"
                 >
-                  <div className="relative aspect-square bg-slate-50 overflow-hidden">
+                  <div className="relative aspect-square bg-gray-50 overflow-hidden">
                     <Image
                       src={`/products/${product.image}`}
                       alt={product.title}
                       fill
-                      className="object-contain group-hover:scale-110 transition-transform duration-500"
+                      className="object-contain group-hover:scale-105 transition-transform duration-500"
                     />
-                    <div className="absolute top-3 left-3 bg-gradient-to-r from-red-500 to-orange-500 text-white px-3 py-1 rounded-full font-bold shadow-lg">
-                      {product.discount}% OFF
-                    </div>
+                    {product.discount > 0 && (
+                      <div className="absolute top-3 left-3 bg-red-600 text-white px-3 py-1 font-bold text-xs uppercase tracking-wide">
+                        {product.discount}% OFF
+                      </div>
+                    )}
                   </div>
                   <div className="p-4">
                     <Link href={`/product/${product.id}`}>
-                      <h3 className="font-bold text-slate-900 mb-2 line-clamp-2 hover:text-blue-600">
+                      <h3 className="font-bold text-black mb-3 line-clamp-2 hover:underline uppercase text-sm tracking-wide">
                         {product.title}
                       </h3>
                     </Link>
-                    <div className="flex items-baseline gap-2 mb-3">
-                      <span className="text-2xl font-bold text-slate-900">
-                        ₹{product.discountPrice.toLocaleString()}
+                    <div className="flex items-baseline gap-2 mb-4">
+                      <span className="text-xl font-bold text-black">
+                        RS.{product.discountPrice.toLocaleString()}
                       </span>
-                      <span className="text-sm text-slate-400 line-through">
-                        ₹{product.price.toLocaleString()}
+                      <span className="text-sm text-gray-400 line-through">
+                        RS.{product.price.toLocaleString()}
                       </span>
                     </div>
                     <button
-                      id={`cart-btn-${product.id}`}
                       onClick={() => handleAddToCart(product.id)}
-                      disabled={product.stock === 0 || addingToCart === product.id}
-                      className="w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white py-3 rounded-lg font-semibold hover:from-blue-700 hover:to-blue-800 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                      disabled={
+                        product.stock === 0 || addingToCart === product.id
+                      }
+                      className="w-full bg-black text-white py-3 font-bold hover:bg-gray-900 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 uppercase tracking-wider text-xs"
                     >
                       <ShoppingCart className="w-4 h-4" />
-                      {addingToCart === product.id ? "Adding..." : product.stock === 0 ? "Out of Stock" : "Add to Cart"}
+                      {addingToCart === product.id
+                        ? "ADDING..."
+                        : product.stock === 0
+                        ? "OUT OF STOCK"
+                        : "ADD TO CART"}
                     </button>
                   </div>
                 </div>
@@ -305,60 +308,51 @@ export default function HomePage() {
       )}
 
       {/* Featured Products */}
-      <section className="py-16 bg-white">
+      <section className="py-20 bg-white">
         <div className="container mx-auto px-4">
-          <div className="text-center mb-12">
-            <h2 className="text-4xl font-bold text-slate-900 mb-3">Featured Products</h2>
-            <p className="text-lg text-slate-600">Handpicked collection just for you</p>
+          <div className="text-center mb-16">
+            <h2 className="text-4xl font-bold text-black mb-3 uppercase tracking-widest">
+              FEATURED PRODUCTS
+            </h2>
+            <div className="w-20 h-1 bg-black mx-auto"></div>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
             {featuredProducts.map((product) => (
               <div
                 key={product.id}
-                className="group bg-white border border-slate-200 rounded-xl hover:shadow-2xl transition-all duration-300 overflow-hidden"
+                className="group bg-white border border-gray-200 hover:border-black transition-all duration-300"
               >
-                <div className="relative aspect-square bg-slate-50 overflow-hidden">
+                <div className="relative aspect-square bg-gray-50 overflow-hidden">
                   <Image
                     src={`/products/${product.image}`}
                     alt={product.title}
                     fill
-                    className="object-contain group-hover:scale-110 transition-transform duration-500"
+                    className="object-contain group-hover:scale-105 transition-transform duration-500"
                   />
                   {product.discount > 0 && (
-                    <div className="absolute top-3 left-3 bg-red-500 text-white px-3 py-1 rounded-full text-sm font-bold">
-                      -{product.discount}%
+                    <div className="absolute top-3 left-3 bg-red-600 text-white px-3 py-1 text-xs font-bold uppercase tracking-wide">
+                      {product.discount}% OFF
                     </div>
                   )}
                 </div>
 
                 <div className="p-4">
-                  <span className="text-xs text-blue-600 font-semibold uppercase tracking-wide">
+                  <span className="text-xs text-gray-600 font-bold uppercase tracking-wider">
                     {product.category}
                   </span>
                   <Link href={`/product/${product.id}`}>
-                    <h3 className="font-bold text-slate-900 my-2 line-clamp-2 hover:text-blue-600 transition-colors">
+                    <h3 className="font-bold text-black my-2 line-clamp-2 hover:underline uppercase text-sm tracking-wide">
                       {product.title}
                     </h3>
                   </Link>
-                  <div className="flex items-center gap-1 mb-3">
-                    {[...Array(5)].map((_, i) => (
-                      <Star
-                        key={i}
-                        className={`w-4 h-4 ${
-                          i < 4 ? 'fill-yellow-400 text-yellow-400' : 'text-slate-300'
-                        }`}
-                      />
-                    ))}
-                    <span className="text-sm text-slate-600 ml-1">(4.0)</span>
-                  </div>
 
                   <div className="flex items-baseline gap-2 mb-4">
-                    <span className="text-2xl font-bold text-slate-900">
-                      ₹{product.discountPrice.toLocaleString()}
+                    <span className="text-xl font-bold text-black">
+                      RS.{product.discountPrice.toLocaleString()}
                     </span>
                     {product.discount > 0 && (
-                      <span className="text-sm text-slate-400 line-through">
-                        ₹{product.price.toLocaleString()}
+                      <span className="text-sm text-gray-400 line-through">
+                        RS.{product.price.toLocaleString()}
                       </span>
                     )}
                   </div>
@@ -366,17 +360,22 @@ export default function HomePage() {
                   <div className="flex gap-2">
                     <Link
                       href={`/product/${product.id}`}
-                      className="flex-1 border-2 border-slate-200 text-slate-700 py-2 text-center rounded-lg hover:bg-slate-50 font-semibold transition-all"
+                      className="flex-1 border-2 border-black text-black py-2 text-center hover:bg-black hover:text-white font-bold transition-all uppercase tracking-wider text-xs"
                     >
-                      View
+                      VIEW
                     </Link>
                     <button
-                      id={`cart-btn-${product.id}`}
                       onClick={() => handleAddToCart(product.id)}
-                      disabled={product.stock === 0 || addingToCart === product.id}
-                      className="flex-1 bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                      disabled={
+                        product.stock === 0 || addingToCart === product.id
+                      }
+                      className="flex-1 bg-black text-white py-2 hover:bg-gray-900 font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed uppercase tracking-wider text-xs"
                     >
-                      {addingToCart === product.id ? "..." : product.stock === 0 ? "Out" : "Cart"}
+                      {addingToCart === product.id
+                        ? "..."
+                        : product.stock === 0
+                        ? "OUT"
+                        : "CART"}
                     </button>
                   </div>
                 </div>
@@ -384,12 +383,12 @@ export default function HomePage() {
             ))}
           </div>
 
-          <div className="text-center mt-12">
+          <div className="text-center mt-16">
             <Link
               href="/product"
-              className="inline-flex items-center gap-2 bg-gradient-to-r from-blue-600 to-blue-700 text-white px-8 py-4 rounded-xl font-semibold hover:from-blue-700 hover:to-blue-800 transition-all shadow-lg"
+              className="inline-flex items-center gap-3 bg-black text-white px-10 py-4 font-bold hover:bg-gray-900 transition-all uppercase tracking-widest text-sm"
             >
-              View All Products
+              VIEW ALL PRODUCTS
               <ArrowRight className="w-5 h-5" />
             </Link>
           </div>
@@ -397,45 +396,126 @@ export default function HomePage() {
       </section>
 
       {/* Footer */}
-      <footer className="bg-slate-900 text-white py-12">
+      <footer className="bg-black text-white py-16 border-t border-gray-800">
         <div className="container mx-auto px-4">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-12">
             <div>
-              <h3 className="text-2xl font-bold mb-4 text-blue-400">CloudMall</h3>
-              <p className="text-slate-400">
-                Your trusted destination for quality products at the best prices.
+              <h3 className="text-2xl font-bold mb-4 uppercase tracking-widest">
+                CLOUDMALL
+              </h3>
+              <p className="text-gray-400 text-sm uppercase tracking-wide">
+                Premium Shopping Destination
               </p>
             </div>
             <div>
-              <h4 className="font-semibold mb-4">Quick Links</h4>
-              <ul className="space-y-2 text-slate-400">
-                <li><Link href="/product" className="hover:text-white transition-colors">Products</Link></li>
-                <li><Link href="/about" className="hover:text-white transition-colors">About Us</Link></li>
-                <li><Link href="/contact" className="hover:text-white transition-colors">Contact</Link></li>
+              <h4 className="font-bold mb-4 uppercase tracking-wider text-sm">
+                QUICK LINKS
+              </h4>
+              <ul className="space-y-2 text-gray-400 text-sm">
+                <li>
+                  <Link
+                    href="/product"
+                    className="hover:text-white transition-colors uppercase tracking-wide"
+                  >
+                    Products
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="/about"
+                    className="hover:text-white transition-colors uppercase tracking-wide"
+                  >
+                    About Us
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="/contact"
+                    className="hover:text-white transition-colors uppercase tracking-wide"
+                  >
+                    Contact
+                  </Link>
+                </li>
               </ul>
             </div>
             <div>
-              <h4 className="font-semibold mb-4">Support</h4>
-              <ul className="space-y-2 text-slate-400">
-                <li><Link href="/help" className="hover:text-white transition-colors">Help Center</Link></li>
-                <li><Link href="/returns" className="hover:text-white transition-colors">Returns</Link></li>
-                <li><Link href="/shipping" className="hover:text-white transition-colors">Shipping</Link></li>
+              <h4 className="font-bold mb-4 uppercase tracking-wider text-sm">
+                SUPPORT
+              </h4>
+              <ul className="space-y-2 text-gray-400 text-sm">
+                <li>
+                  <Link
+                    href="/help"
+                    className="hover:text-white transition-colors uppercase tracking-wide"
+                  >
+                    Help Center
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="/returns"
+                    className="hover:text-white transition-colors uppercase tracking-wide"
+                  >
+                    Returns
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="/shipping"
+                    className="hover:text-white transition-colors uppercase tracking-wide"
+                  >
+                    Shipping
+                  </Link>
+                </li>
               </ul>
             </div>
             <div>
-              <h4 className="font-semibold mb-4">Connect</h4>
-              <div className="flex gap-4">
-                <a href="#" className="hover:text-blue-400 transition-colors">Facebook</a>
-                <a href="#" className="hover:text-blue-400 transition-colors">Twitter</a>
-                <a href="#" className="hover:text-blue-400 transition-colors">Instagram</a>
+              <h4 className="font-bold mb-4 uppercase tracking-wider text-sm">
+                CONNECT
+              </h4>
+              <div className="flex gap-4 text-sm">
+                <a
+                  href="#"
+                  className="hover:text-gray-400 transition-colors uppercase tracking-wide"
+                >
+                  Facebook
+                </a>
+                <a
+                  href="#"
+                  className="hover:text-gray-400 transition-colors uppercase tracking-wide"
+                >
+                  Twitter
+                </a>
+                <a
+                  href="#"
+                  className="hover:text-gray-400 transition-colors uppercase tracking-wide"
+                >
+                  Instagram
+                </a>
               </div>
             </div>
           </div>
-          <div className="border-t border-slate-800 pt-8 text-center text-slate-400">
-            <p>&copy; 2025 CloudMall. All rights reserved.</p>
+          <div className="border-t border-gray-800 pt-8 text-center text-gray-400 text-sm uppercase tracking-wide">
+            <p>&copy; 2025 CLOUDMALL. ALL RIGHTS RESERVED.</p>
           </div>
         </div>
       </footer>
+
+      <style jsx>{`
+        @keyframes slide-in {
+          from {
+            transform: translateX(100%);
+            opacity: 0;
+          }
+          to {
+            transform: translateX(0);
+            opacity: 1;
+          }
+        }
+        .animate-slide-in {
+          animation: slide-in 0.3s ease-out;
+        }
+      `}</style>
     </div>
   );
 }
