@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { ShoppingCart, Heart, Star, Truck, Shield, ArrowLeft, Plus, Minus, Check, Zap } from 'lucide-react';
+import { ShoppingCart, Heart, Star, Truck, Shield, ArrowLeft, Plus, Minus, Check, Zap, Sparkles } from 'lucide-react';
 import Image from 'next/image';
 
 interface Product {
@@ -20,7 +20,7 @@ interface Product {
 
 export default function ProductDetailPage() {
   const params = useParams(); 
-  const productId = params.id;
+  const productId = params.id as string;
   const router = useRouter();
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
@@ -28,11 +28,16 @@ export default function ProductDetailPage() {
   const [selectedImage, setSelectedImage] = useState(0);
   const [addingToCart, setAddingToCart] = useState(false);
   const [cartAdded, setCartAdded] = useState(false);
-  const [recommendedProducts, setRecommendedProducts] = useState<Product[]>([]);
+  const [similarProducts, setSimilarProducts] = useState<Product[]>([]);
+  const [trendingProducts, setTrendingProducts] = useState<Product[]>([]);
 
   useEffect(() => {
-    fetchProduct();
-    fetchRecommendedProducts();
+    if (productId) {
+      fetchProduct();
+      trackProductView();
+      fetchSimilarProducts();
+      fetchTrendingProducts();
+    }
   }, [productId]);
 
   const fetchProduct = async () => {
@@ -52,23 +57,82 @@ export default function ProductDetailPage() {
     }
   };
 
-  const fetchRecommendedProducts = async () => {
+  // NEW: Track product view
+  const trackProductView = async () => {
     try {
-      const response = await fetch(`http://localhost:8080/api/products?pageSize=4`, {
+      await fetch('http://localhost:8080/api/recommendations/track', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({
+          productId: productId,
+          action: 'VIEW'
+        })
+      });
+    } catch (error) {
+      console.error('Error tracking view:', error);
+    }
+  };
+
+  // NEW: Track activity helper
+  const trackActivity = async (action: string) => {
+    try {
+      await fetch('http://localhost:8080/api/recommendations/track', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({
+          productId: productId,
+          action
+        })
+      });
+    } catch (error) {
+      console.error('Error tracking activity:', error);
+    }
+  };
+
+  // NEW: Fetch similar products based on this product
+  const fetchSimilarProducts = async () => {
+    try {
+      const response = await fetch(`http://localhost:8080/api/recommendations/similar/${productId}?limit=4`, {
         credentials: 'include'
       });
       
       if (response.ok) {
         const data = await response.json();
-        setRecommendedProducts(data.products || []);
+        setSimilarProducts(data.products || []);
       }
     } catch (error) {
-      console.error('Error fetching recommended products:', error);
+      console.error('Error fetching similar products:', error);
+    }
+  };
+
+  // NEW: Fetch trending products
+  const fetchTrendingProducts = async () => {
+    try {
+      const response = await fetch('http://localhost:8080/api/recommendations/trending?limit=4', {
+        credentials: 'include'
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        setTrendingProducts(data.products || []);
+      }
+    } catch (error) {
+      console.error('Error fetching trending products:', error);
     }
   };
 
   const handleAddToCart = async () => {
     setAddingToCart(true);
+    
+    // Track add to cart activity
+    trackActivity('ADD_TO_CART');
+    
     try {
       const response = await fetch(`http://localhost:8080/api/user/cart?productId=${productId}`, {
         method: 'POST',
@@ -90,6 +154,10 @@ export default function ProductDetailPage() {
 
   const handleBuyNow = async () => {
     setAddingToCart(true);
+    
+    // Track add to cart activity
+    trackActivity('ADD_TO_CART');
+    
     try {
       const response = await fetch(`http://localhost:8080/api/user/cart?productId=${productId}`, {
         method: 'POST',
@@ -108,6 +176,24 @@ export default function ProductDetailPage() {
     }
   };
 
+  // NEW: Handle product click with tracking
+  const handleProductClick = (clickedProduct: Product) => {
+    // Track click
+    fetch('http://localhost:8080/api/recommendations/track', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      credentials: 'include',
+      body: JSON.stringify({
+        productId: clickedProduct.id.toString(),
+        action: 'CLICK'
+      })
+    }).catch(err => console.error('Error tracking click:', err));
+
+    router.push(`/product/${clickedProduct.id}`);
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center">
@@ -122,7 +208,7 @@ export default function ProductDetailPage() {
         <div className="text-center">
           <h2 className="text-2xl font-bold text-slate-800 mb-2">Product not found</h2>
           <button 
-            onClick={() => router.push('/products')}
+            onClick={() => router.push('/product')}
             className="text-blue-600 hover:text-blue-700 font-medium"
           >
             Back to Products
@@ -140,6 +226,17 @@ export default function ProductDetailPage() {
   const images = [
     `/products/${product.image}`,
   ];
+
+  // Combine similar and trending products, prioritizing similar
+  const recommendedProducts = [...similarProducts];
+  if (recommendedProducts.length < 4) {
+    const remaining = 4 - recommendedProducts.length;
+    const additionalProducts = trendingProducts
+      .filter(tp => !recommendedProducts.some(sp => sp.id === tp.id))
+      .filter(tp => tp.id !== product.id)
+      .slice(0, remaining);
+    recommendedProducts.push(...additionalProducts);
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-50">
@@ -390,16 +487,25 @@ export default function ProductDetailPage() {
           </div>
         </div>
 
-        {/* Recommended Products */}
+        {/* NEW: Smart Recommendations Section */}
         {recommendedProducts.length > 0 && (
           <div className="mt-16 pb-8">
             <div className="flex items-center justify-between mb-8">
-              <div>
-                <h2 className="text-3xl font-bold text-slate-900 mb-2">You May Also Like</h2>
-                <p className="text-slate-600">Discover more amazing products curated for you</p>
+              <div className="flex items-center gap-3">
+                <Sparkles className="w-8 h-8 text-purple-600" />
+                <div>
+                  <h2 className="text-3xl font-bold text-slate-900 mb-1">
+                    {similarProducts.length > 0 ? 'Similar Products' : 'You May Also Like'}
+                  </h2>
+                  <p className="text-slate-600">
+                    {similarProducts.length > 0 
+                      ? 'Products similar to what you\'re viewing' 
+                      : 'Trending products curated for you'}
+                  </p>
+                </div>
               </div>
               <button 
-                onClick={() => router.push('/products')}
+                onClick={() => router.push('/product')}
                 className="hidden md:flex items-center gap-2 text-blue-600 hover:text-blue-700 font-semibold transition-colors group"
               >
                 View All
@@ -412,7 +518,7 @@ export default function ProductDetailPage() {
                 <div
                   key={item.id}
                   className="group bg-white rounded-xl shadow-md hover:shadow-2xl transition-all duration-300 overflow-hidden cursor-pointer transform hover:-translate-y-2"
-                  onClick={() => router.push(`/product/${item.id}`)}
+                  onClick={() => handleProductClick(item)}
                 >
                   <div className="relative aspect-square overflow-hidden bg-slate-100">
                     <img
@@ -430,7 +536,7 @@ export default function ProductDetailPage() {
                         <button 
                           onClick={(e) => {
                             e.stopPropagation();
-                            router.push(`/product/${item.id}`);
+                            handleProductClick(item);
                           }}
                           className="flex-1 bg-white text-slate-900 py-2 rounded-lg font-semibold hover:bg-blue-600 hover:text-white transition-colors text-sm"
                         >
@@ -487,7 +593,7 @@ export default function ProductDetailPage() {
             </div>
 
             <button 
-              onClick={() => router.push('/products')}
+              onClick={() => router.push('/product')}
               className="md:hidden mt-6 w-full flex items-center justify-center gap-2 text-blue-600 hover:text-blue-700 font-semibold transition-colors py-3 bg-blue-50 rounded-xl"
             >
               View All Products

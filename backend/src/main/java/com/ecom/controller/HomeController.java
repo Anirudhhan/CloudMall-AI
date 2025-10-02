@@ -37,6 +37,7 @@ import com.ecom.service.CartService;
 import com.ecom.service.CategoryService;
 import com.ecom.service.ProductService;
 import com.ecom.service.UserService;
+import com.ecom.service.impl.RecommendationService;
 import com.ecom.util.CommonUtil;
 
 import io.micrometer.common.util.StringUtils;
@@ -76,6 +77,9 @@ public class HomeController {
 
     @Autowired
     private CartService cartService;
+
+    @Autowired
+    private RecommendationService recommendationService;
 
     // Fixed login endpoint with proper session management
     @PostMapping("/login")
@@ -204,6 +208,7 @@ public class HomeController {
             return ResponseEntity.ok(response);
         }
     }
+    
     @GetMapping("/user-info")
     public ResponseEntity<Map<String, Object>> getUserInfo(Principal principal) {
         Map<String, Object> response = new HashMap<>();
@@ -286,14 +291,26 @@ public class HomeController {
         return ResponseEntity.ok(response);
     }
 
-    // Get single product by ID
+    // Get single product by ID with VIEW tracking
     @GetMapping("/product/{id}")
-    public ResponseEntity<Product> getProduct(@PathVariable int id) {
+    public ResponseEntity<Product> getProduct(
+            @PathVariable int id,
+            Principal principal,
+            HttpSession session) {
+        
         Product product = productService.getProductById(id);
-        if (product == null) {
-            return ResponseEntity.notFound().build();
+        
+        if (product != null) {
+            // Track view activity
+            Integer userId = null;
+            if (principal != null) {
+                UserDtls user = userService.getUserByEmail(principal.getName());
+                userId = user.getId();
+            }
+            recommendationService.logActivity(userId, id, "VIEW", session.getId());
         }
-        return ResponseEntity.ok(product);
+        
+        return product == null ? ResponseEntity.notFound().build() : ResponseEntity.ok(product);
     }
 
     // Register user

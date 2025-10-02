@@ -31,8 +31,10 @@ import com.ecom.service.CartService;
 import com.ecom.service.CategoryService;
 import com.ecom.service.OrderService;
 import com.ecom.service.UserService;
+import com.ecom.service.impl.RecommendationService;
 import com.ecom.util.CommonUtil;
 import com.ecom.util.OrderStatus;
+import jakarta.servlet.http.HttpSession;
 
 @RestController
 @RequestMapping("/api/user")
@@ -56,6 +58,9 @@ public class UserController {
 
     @Autowired
     private PasswordEncoder passwordEncoder;
+
+    @Autowired
+    private RecommendationService recommendationService;
 
     // Get user dashboard data (user details + categories + cart count)
     @GetMapping("/dashboard")
@@ -84,7 +89,8 @@ public class UserController {
     @PostMapping("/cart")
     public ResponseEntity<Map<String, Object>> addToCart(
             @RequestParam Integer productId, 
-            Principal principal) {
+            Principal principal,
+            HttpSession session) {
         
         Map<String, Object> response = new HashMap<>();
 
@@ -102,6 +108,9 @@ public class UserController {
             response.put("message", "Failed to add product to cart");
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         } else {
+            // Track ADD_TO_CART activity
+            recommendationService.logActivity(user.getId(), productId, "ADD_TO_CART", session.getId());
+            
             response.put("success", true);
             response.put("message", "Product added to cart successfully");
             response.put("cart", saveCart);
@@ -217,7 +226,8 @@ public class UserController {
     @PostMapping("/orders")
     public ResponseEntity<Map<String, Object>> saveOrder(
             @RequestBody OrderRequest request, 
-            Principal principal) {
+            Principal principal,
+            HttpSession session) {
         
         Map<String, Object> response = new HashMap<>();
 
@@ -229,7 +239,14 @@ public class UserController {
 
         try {
             UserDtls user = getLoggedInUserDetails(principal);
+            List<Cart> carts = cartService.getCartsByUser(user.getId());
+            
             orderService.saveOrder(user.getId(), request);
+
+            // Track PURCHASE activity for each product in the order
+            for (Cart cart : carts) {
+                recommendationService.logActivity(user.getId(), cart.getProduct().getId(), "PURCHASE", session.getId());
+            }
 
             response.put("success", true);
             response.put("message", "Order placed successfully");

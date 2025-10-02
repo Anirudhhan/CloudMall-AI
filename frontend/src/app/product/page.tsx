@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Search, SlidersHorizontal, X, ChevronDown, ChevronUp, Star, ShoppingCart, Heart, Check } from 'lucide-react';
+import { SlidersHorizontal, X, ChevronDown, ChevronUp, Star, ShoppingCart, Heart, Check, Sparkles } from 'lucide-react';
 
 interface Product {
   id: number;
@@ -28,6 +28,7 @@ export default function ProductsSearchPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [products, setProducts] = useState<Product[]>([]);
+  const [recommendedProducts, setRecommendedProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState(searchParams.get('search') || '');
@@ -48,7 +49,14 @@ export default function ProductsSearchPage() {
   useEffect(() => {
     fetchCategories();
     fetchProducts();
+    fetchRecommendations();
   }, [searchQuery, selectedCategory, currentPage]);
+
+  useEffect(() => {
+    products.forEach(product => {
+      trackActivity(product.id, 'VIEW');
+    });
+  }, [products]);
 
   const fetchCategories = async () => {
     try {
@@ -76,8 +84,6 @@ export default function ProductsSearchPage() {
       const response = await fetch(`http://localhost:8080/api/products?${params}`, {
         credentials: 'include'
       });
-
-      console.log(response);
       
       if (response.ok) {
         const data = await response.json();
@@ -89,6 +95,72 @@ export default function ProductsSearchPage() {
       console.error('Error fetching products:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchRecommendations = async () => {
+    try {
+      const response = await fetch('http://localhost:8080/api/recommendations/for-you?limit=6', {
+        credentials: 'include'
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        setRecommendedProducts(data.recommendations || []);
+      }
+    } catch (error) {
+      console.error('Error fetching recommendations:', error);
+    }
+  };
+
+  const trackActivity = async (productId: number, action: string) => {
+    try {
+      await fetch('http://localhost:8080/api/recommendations/track', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({
+          productId: productId.toString(),
+          action
+        })
+      });
+    } catch (error) {
+      console.error('Error tracking activity:', error);
+    }
+  };
+
+  const handleProductClick = (product: Product) => {
+    trackActivity(product.id, 'CLICK');
+    router.push(`/product/${product.id}`);
+  };
+
+  const handleAddToCart = async (e: React.MouseEvent, product: Product) => {
+    e.stopPropagation();
+    
+    trackActivity(product.id, 'ADD_TO_CART');
+    
+    try {
+      const response = await fetch('http://localhost:8080/api/user/cart', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        credentials: 'include',
+        body: new URLSearchParams({
+          productId: product.id.toString()
+        })
+      });
+
+      if (response.ok) {
+        alert('Product added to cart!');
+      } else {
+        alert('Failed to add to cart. Please login.');
+      }
+    } catch (error) {
+      console.error('Error adding to cart:', error);
+      alert('Error adding to cart');
     }
   };
 
@@ -288,6 +360,40 @@ export default function ProductsSearchPage() {
           </div>
 
           <div className="flex-1">
+            {recommendedProducts.length > 0 && (
+              <div className="bg-gradient-to-r from-purple-50 to-blue-50 rounded-xl shadow-md p-6 mb-6 border border-purple-200">
+                <div className="flex items-center gap-2 mb-4">
+                  <Sparkles className="w-6 h-6 text-purple-600" />
+                  <h2 className="text-xl font-bold text-slate-900">Recommended For You</h2>
+                </div>
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+                  {recommendedProducts.map((product) => (
+                    <div
+                      key={product.id}
+                      className="bg-white rounded-lg shadow hover:shadow-lg transition-all cursor-pointer overflow-hidden"
+                      onClick={() => handleProductClick(product)}
+                    >
+                      <div className="aspect-square overflow-hidden bg-slate-100">
+                        <img
+                          src={`/products/${product.image}`}
+                          alt={product.title}
+                          className="w-full h-full object-cover hover:scale-110 transition-transform duration-300"
+                        />
+                      </div>
+                      <div className="p-2">
+                        <h3 className="text-xs font-semibold text-slate-900 line-clamp-1">
+                          {product.title}
+                        </h3>
+                        <p className="text-sm font-bold text-blue-600">
+                          ₹{product.discountPrice?.toLocaleString() || product.price.toLocaleString()}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
             <div className="bg-white rounded-xl shadow-md p-4 mb-6">
               <div className="flex flex-wrap items-center justify-between gap-4">
                 <div className="flex-1">
@@ -364,7 +470,7 @@ export default function ProductsSearchPage() {
                   <div
                     key={product.id}
                     className="group bg-white rounded-xl shadow-md hover:shadow-2xl transition-all duration-300 overflow-hidden cursor-pointer transform hover:-translate-y-2"
-                    onClick={() => router.push(`/product/${product.id}`)}
+                    onClick={() => handleProductClick(product)}
                   >
                     <div className="relative aspect-square overflow-hidden bg-slate-100">
                       <img
@@ -377,12 +483,18 @@ export default function ProductsSearchPage() {
                           {product.discount}% OFF
                         </div>
                       )}
-                      <button className="absolute top-3 right-3 p-2 bg-white rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-opacity hover:bg-pink-50">
+                      <button 
+                        className="absolute top-3 right-3 p-2 bg-white rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-opacity hover:bg-pink-50"
+                        onClick={(e) => e.stopPropagation()}
+                      >
                         <Heart className="w-5 h-5 text-slate-600" />
                       </button>
                       <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                         <div className="absolute bottom-4 left-4 right-4">
-                          <button className="w-full bg-white text-slate-900 py-2 rounded-lg font-semibold hover:bg-blue-600 hover:text-white transition-colors flex items-center justify-center gap-2">
+                          <button 
+                            onClick={(e) => handleAddToCart(e, product)}
+                            className="w-full bg-white text-slate-900 py-2 rounded-lg font-semibold hover:bg-blue-600 hover:text-white transition-colors flex items-center justify-center gap-2"
+                          >
                             <ShoppingCart className="w-5 h-5" />
                             Add to Cart
                           </button>
