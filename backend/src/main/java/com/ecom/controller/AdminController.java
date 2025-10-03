@@ -7,6 +7,8 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.security.Principal;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -34,11 +36,15 @@ import com.ecom.model.Category;
 import com.ecom.model.Product;
 import com.ecom.model.ProductOrder;
 import com.ecom.model.UserDtls;
+import com.ecom.repository.ProductSimilarityRepository;
+import com.ecom.repository.UserActivityRepository;
+import com.ecom.repository.UserProductScoreRepository;
 import com.ecom.service.CartService;
 import com.ecom.service.CategoryService;
 import com.ecom.service.OrderService;
 import com.ecom.service.ProductService;
 import com.ecom.service.UserService;
+import com.ecom.service.impl.RecommendationService;
 import com.ecom.util.CommonUtil;
 import com.ecom.util.OrderStatus;
 
@@ -68,11 +74,23 @@ public class AdminController {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
+    @Autowired
+    private RecommendationService recommendationService;
+
+    @Autowired
+    private UserActivityRepository activityRepository;
+
+    @Autowired
+    private ProductSimilarityRepository similarityRepository;
+
+    @Autowired
+    private UserProductScoreRepository scoreRepository;
+
     // Get admin dashboard data
     @GetMapping("/dashboard")
     public ResponseEntity<Map<String, Object>> getDashboardData(Principal principal) {
         Map<String, Object> response = new HashMap<>();
-        
+
         if (principal != null) {
             String email = principal.getName();
             UserDtls userDtls = userService.getUserByEmail(email);
@@ -83,34 +101,39 @@ public class AdminController {
 
         List<Category> categories = categoryService.getAllActiveCategory();
         response.put("categories", categories);
-        
+
         // Add dashboard statistics
         long totalProducts = productService.getAllProducts().size();
         long totalCategories = categoryService.getAllCategory().size();
         long totalOrders = orderService.getAllOrders().size();
-        
+
+        // Add recommendation stats
+        long totalActivities = activityRepository.count();
+        long totalSimilarities = similarityRepository.count();
+
         response.put("stats", Map.of(
-            "totalProducts", totalProducts,
-            "totalCategories", totalCategories,
-            "totalOrders", totalOrders
+                "totalProducts", totalProducts,
+                "totalCategories", totalCategories,
+                "totalOrders", totalOrders,
+                "totalActivities", totalActivities,
+                "totalSimilarities", totalSimilarities
         ));
-        
+
         return ResponseEntity.ok(response);
     }
 
     // ========== CATEGORY MANAGEMENT ==========
 
-    @GetMapping("/ca" +
-            "tegories")
+    @GetMapping("/categories")
     public ResponseEntity<Map<String, Object>> getCategories(
             @RequestParam(name = "pageNo", defaultValue = "0") Integer pageNo,
             @RequestParam(name = "pageSize", defaultValue = "10") Integer pageSize) {
-        
+
         Map<String, Object> response = new HashMap<>();
-        
+
         Page<Category> page = categoryService.getAllCategorPagination(pageNo, pageSize);
         List<Category> categories = page.getContent();
-        
+
         Map<String, Object> pagination = new HashMap<>();
         pagination.put("currentPage", page.getNumber());
         pagination.put("pageSize", pageSize);
@@ -123,7 +146,7 @@ public class AdminController {
 
         response.put("categories", categories);
         response.put("pagination", pagination);
-        
+
         return ResponseEntity.ok(response);
     }
 
@@ -144,7 +167,7 @@ public class AdminController {
         Category category = new Category();
         category.setName(name);
         category.setIsActive(isActive);
-        
+
         String imageName = (file == null || file.isEmpty()) ? "default.jpg" : file.getOriginalFilename();
         category.setImageName(imageName);
 
@@ -167,8 +190,8 @@ public class AdminController {
         if (file != null && !file.isEmpty()) {
             try {
                 File saveFile = new ClassPathResource("static/img").getFile();
-                Path path = Paths.get(saveFile.getAbsolutePath() + File.separator + "category_img" + 
-                                    File.separator + file.getOriginalFilename());
+                Path path = Paths.get(saveFile.getAbsolutePath() + File.separator + "category_img" +
+                        File.separator + file.getOriginalFilename());
                 Files.copy(file.getInputStream(), path, StandardCopyOption.REPLACE_EXISTING);
             } catch (IOException e) {
                 System.err.println("Error saving category image: " + e.getMessage());
@@ -184,7 +207,7 @@ public class AdminController {
     @DeleteMapping("/categories/{id}")
     public ResponseEntity<Map<String, Object>> deleteCategory(@PathVariable int id) {
         Map<String, Object> response = new HashMap<>();
-        
+
         Boolean deleteCategory = categoryService.deleteCategory(id);
 
         if (deleteCategory) {
@@ -235,8 +258,8 @@ public class AdminController {
             if (file != null && !file.isEmpty()) {
                 try {
                     File saveFile = new ClassPathResource("static/img").getFile();
-                    Path path = Paths.get(saveFile.getAbsolutePath() + File.separator + "category_img" + 
-                                        File.separator + file.getOriginalFilename());
+                    Path path = Paths.get(saveFile.getAbsolutePath() + File.separator + "category_img" +
+                            File.separator + file.getOriginalFilename());
                     Files.copy(file.getInputStream(), path, StandardCopyOption.REPLACE_EXISTING);
                 } catch (IOException e) {
                     System.err.println("Error saving category image: " + e.getMessage());
@@ -275,20 +298,20 @@ public class AdminController {
         product.setPrice(price);
         product.setStock(stock);
         product.setIsActive(isActive);
-        
+
         String imageName = (image == null || image.isEmpty()) ? "default.jpg" : image.getOriginalFilename();
         product.setImage(imageName);
         product.setDiscount(0);
         product.setDiscountPrice(product.getPrice());
-        
+
         Product saveProduct = productService.saveProduct(product);
 
         if (!ObjectUtils.isEmpty(saveProduct)) {
             if (image != null && !image.isEmpty()) {
                 try {
                     File saveFile = new ClassPathResource("static/img").getFile();
-                    Path path = Paths.get(saveFile.getAbsolutePath() + File.separator + "product_img" + 
-                                        File.separator + image.getOriginalFilename());
+                    Path path = Paths.get(saveFile.getAbsolutePath() + File.separator + "product_img" +
+                            File.separator + image.getOriginalFilename());
                     Files.copy(image.getInputStream(), path, StandardCopyOption.REPLACE_EXISTING);
                 } catch (IOException e) {
                     System.err.println("Error saving product image: " + e.getMessage());
@@ -341,11 +364,14 @@ public class AdminController {
     @DeleteMapping("/products/{id}")
     public ResponseEntity<Map<String, Object>> deleteProduct(@PathVariable int id) {
         Map<String, Object> response = new HashMap<>();
-        
+
+        // Delete associated similarities when deleting product
+        similarityRepository.deleteByProductId(id);
+
         Boolean deleteProduct = productService.deleteProduct(id);
         if (deleteProduct) {
             response.put("success", true);
-            response.put("message", "Product deleted successfully");
+            response.put("message", "Product and related recommendations deleted successfully");
             return ResponseEntity.ok(response);
         } else {
             response.put("success", false);
@@ -357,16 +383,16 @@ public class AdminController {
     @GetMapping("/products/{id}")
     public ResponseEntity<Map<String, Object>> getProductForEdit(@PathVariable int id) {
         Map<String, Object> response = new HashMap<>();
-        
+
         Product product = productService.getProductById(id);
         if (product == null) {
             return ResponseEntity.notFound().build();
         }
-        
+
         List<Category> categories = categoryService.getAllCategory();
         response.put("product", product);
         response.put("categories", categories);
-        
+
         return ResponseEntity.ok(response);
     }
 
@@ -418,7 +444,7 @@ public class AdminController {
     @GetMapping("/users")
     public ResponseEntity<Map<String, Object>> getAllUsers(@RequestParam Integer type) {
         Map<String, Object> response = new HashMap<>();
-        
+
         List<UserDtls> users;
         String userRole;
         if (type == 1) {
@@ -428,11 +454,11 @@ public class AdminController {
             users = userService.getUsers("ROLE_ADMIN");
             userRole = "ROLE_ADMIN";
         }
-        
+
         response.put("users", users);
         response.put("userType", type);
         response.put("userRole", userRole);
-        
+
         return ResponseEntity.ok(response);
     }
 
@@ -440,9 +466,9 @@ public class AdminController {
     public ResponseEntity<Map<String, Object>> updateUserAccountStatus(
             @PathVariable Integer id,
             @RequestParam Boolean status) {
-        
+
         Map<String, Object> response = new HashMap<>();
-        
+
         Boolean updated = userService.updateAccountStatus(id, status);
         if (updated) {
             response.put("success", true);
@@ -461,7 +487,7 @@ public class AdminController {
     public ResponseEntity<Map<String, Object>> getAllOrders(
             @RequestParam(name = "pageNo", defaultValue = "0") Integer pageNo,
             @RequestParam(name = "pageSize", defaultValue = "10") Integer pageSize) {
-        
+
         Map<String, Object> response = new HashMap<>();
 
         Page<ProductOrder> page = orderService.getAllOrdersPagination(pageNo, pageSize);
@@ -562,8 +588,7 @@ public class AdminController {
             @RequestParam("address") String address,
             @RequestParam("city") String city,
             @RequestParam("state") String state,
-            @RequestParam("pincode") String pincode,
-            @RequestParam(value = "img", required = false) MultipartFile file) throws IOException {
+            @RequestParam("pincode") String pincode) throws IOException {
 
         Map<String, Object> response = new HashMap<>();
 
@@ -577,23 +602,9 @@ public class AdminController {
         user.setState(state);
         user.setPincode(pincode);
 
-        String imageName = (file == null || file.isEmpty()) ? "default.jpg" : file.getOriginalFilename();
-        user.setProfileImage(imageName);
-        
         UserDtls saveUser = userService.saveAdmin(user);
 
         if (!ObjectUtils.isEmpty(saveUser)) {
-            if (file != null && !file.isEmpty()) {
-                try {
-                    File saveFile = new ClassPathResource("static/img").getFile();
-                    Path path = Paths.get(saveFile.getAbsolutePath() + File.separator + "profile_img" + 
-                                        File.separator + file.getOriginalFilename());
-                    Files.copy(file.getInputStream(), path, StandardCopyOption.REPLACE_EXISTING);
-                } catch (IOException e) {
-                    System.err.println("Error saving admin profile image: " + e.getMessage());
-                }
-            }
-            
             response.put("success", true);
             response.put("message", "Admin registered successfully");
             response.put("user", saveUser);
@@ -612,14 +623,14 @@ public class AdminController {
         if (principal == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
-        
+
         String email = principal.getName();
         UserDtls user = userService.getUserByEmail(email);
-        
+
         if (user == null) {
             return ResponseEntity.notFound().build();
         }
-        
+
         return ResponseEntity.ok(user);
     }
 
@@ -632,7 +643,6 @@ public class AdminController {
             @RequestParam("city") String city,
             @RequestParam("state") String state,
             @RequestParam("pincode") String pincode,
-            @RequestParam(value = "img", required = false) MultipartFile img,
             Principal principal) {
 
         Map<String, Object> response = new HashMap<>();
@@ -652,7 +662,7 @@ public class AdminController {
         user.setState(state);
         user.setPincode(pincode);
 
-        UserDtls updateUserProfile = userService.updateUserProfile(user, img);
+        UserDtls updateUserProfile = userService.updateUserProfile(user, null);
         if (ObjectUtils.isEmpty(updateUserProfile)) {
             response.put("success", false);
             response.put("message", "Profile not updated");
@@ -688,7 +698,7 @@ public class AdminController {
             String encodePassword = passwordEncoder.encode(newPassword);
             loggedInUserDetails.setPassword(encodePassword);
             UserDtls updateUser = userService.updateUser(loggedInUserDetails);
-            
+
             if (ObjectUtils.isEmpty(updateUser)) {
                 response.put("success", false);
                 response.put("message", "Password not updated! Error in server");
@@ -706,19 +716,286 @@ public class AdminController {
     }
 
     // ========== ORDER STATUS ENUM ==========
-    
+
     @GetMapping("/order-statuses")
     public ResponseEntity<Map<String, Object>[]> getOrderStatuses() {
         OrderStatus[] statuses = OrderStatus.values();
         Map<String, Object>[] response = new Map[statuses.length];
-        
+
         for (int i = 0; i < statuses.length; i++) {
             Map<String, Object> status = new HashMap<>();
             status.put("id", statuses[i].getId());
             status.put("name", statuses[i].getName());
             response[i] = status;
         }
-        
+
         return ResponseEntity.ok(response);
+    }
+
+    // ========== RECOMMENDATION SYSTEM MANAGEMENT ==========
+
+    /**
+     * Get comprehensive recommendation system statistics
+     */
+    @GetMapping("/recommendations/stats")
+    public ResponseEntity<Map<String, Object>> getRecommendationStats(Principal principal) {
+        Map<String, Object> response = new HashMap<>();
+
+        if (principal == null) {
+            response.put("success", false);
+            response.put("message", "Unauthorized");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
+        }
+
+        UserDtls user = userService.getUserByEmail(principal.getName());
+        if (!"ROLE_ADMIN".equals(user.getRole())) {
+            response.put("success", false);
+            response.put("message", "Admin access required");
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
+        }
+
+        try {
+            long totalActivities = activityRepository.count();
+            long totalSimilarities = similarityRepository.count();
+            long totalUserScores = scoreRepository.count();
+
+            Instant sevenDaysAgo = Instant.now().minus(7, ChronoUnit.DAYS);
+            List<?> recentActivitiesList = activityRepository.findRecentPurchases(sevenDaysAgo);
+            long recentActivities = recentActivitiesList != null ? recentActivitiesList.size() : 0;
+
+            response.put("success", true);
+            response.put("stats", Map.of(
+                    "totalActivities", totalActivities,
+                    "totalSimilarities", totalSimilarities,
+                    "totalUserScores", totalUserScores,
+                    "recentPurchases", recentActivities
+            ));
+
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            response.put("success", false);
+            response.put("message", "Error fetching stats: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+    }
+
+    /**
+     * Manually trigger product similarity computation
+     * This computes which products are similar to each other based on:
+     * - Same category
+     * - Co-purchase patterns (users who bought A also bought B)
+     */
+    @PostMapping("/recommendations/compute-similarities")
+    public ResponseEntity<Map<String, Object>> computeProductSimilarities(Principal principal) {
+        Map<String, Object> response = new HashMap<>();
+
+        if (principal == null) {
+            response.put("success", false);
+            response.put("message", "Unauthorized");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
+        }
+
+        UserDtls user = userService.getUserByEmail(principal.getName());
+        if (!"ROLE_ADMIN".equals(user.getRole())) {
+            response.put("success", false);
+            response.put("message", "Admin access required");
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
+        }
+
+        try {
+            new Thread(() -> {
+                recommendationService.computeProductSimilarities();
+            }).start();
+
+            response.put("success", true);
+            response.put("message", "Product similarity computation started in background. This will populate the product_similarity table.");
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            response.put("success", false);
+            response.put("message", "Error starting computation: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+    }
+
+    /**
+     * Manually trigger user score computation for all users
+     * This pre-computes personalized recommendations for each user based on their activity
+     */
+    @PostMapping("/recommendations/compute-all-user-scores")
+    public ResponseEntity<Map<String, Object>> computeAllUserScores(Principal principal) {
+        Map<String, Object> response = new HashMap<>();
+
+        if (principal == null) {
+            response.put("success", false);
+            response.put("message", "Unauthorized");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
+        }
+
+        UserDtls user = userService.getUserByEmail(principal.getName());
+        if (!"ROLE_ADMIN".equals(user.getRole())) {
+            response.put("success", false);
+            response.put("message", "Admin access required");
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
+        }
+
+        try {
+            new Thread(() -> {
+                List<UserDtls> users = userService.getUsers("ROLE_USER");
+                for (UserDtls u : users) {
+                    try {
+                        recommendationService.computeUserScores(u.getId());
+                    } catch (Exception e) {
+                        System.err.println("Error computing scores for user " + u.getId() + ": " + e.getMessage());
+                    }
+                }
+            }).start();
+
+            response.put("success", true);
+            response.put("message", "User score computation started for all users. This will populate the user_product_score table with personalized recommendations.");
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            response.put("success", false);
+            response.put("message", "Error starting computation: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+    }
+
+    /**
+     * Compute personalized recommendations for a specific user
+     */
+    @PostMapping("/recommendations/compute-user-scores/{userId}")
+    public ResponseEntity<Map<String, Object>> computeUserScores(
+            @PathVariable Integer userId,
+            Principal principal) {
+
+        Map<String, Object> response = new HashMap<>();
+
+        if (principal == null) {
+            response.put("success", false);
+            response.put("message", "Unauthorized");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
+        }
+
+        UserDtls user = userService.getUserByEmail(principal.getName());
+        if (!"ROLE_ADMIN".equals(user.getRole())) {
+            response.put("success", false);
+            response.put("message", "Admin access required");
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
+        }
+
+        try {
+            new Thread(() -> {
+                recommendationService.computeUserScores(userId);
+            }).start();
+
+            response.put("success", true);
+            response.put("message", "User score computation started for user ID: " + userId);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            response.put("success", false);
+            response.put("message", "Error starting computation: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+    }
+
+    /**
+     * Clear all recommendation data (for maintenance/debugging)
+     */
+    @DeleteMapping("/recommendations/clear-all")
+    public ResponseEntity<Map<String, Object>> clearAllRecommendationData(Principal principal) {
+        Map<String, Object> response = new HashMap<>();
+
+        if (principal == null) {
+            response.put("success", false);
+            response.put("message", "Unauthorized");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
+        }
+
+        UserDtls user = userService.getUserByEmail(principal.getName());
+        if (!"ROLE_ADMIN".equals(user.getRole())) {
+            response.put("success", false);
+            response.put("message", "Admin access required");
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
+        }
+
+        try {
+            activityRepository.deleteAll();
+            similarityRepository.deleteAll();
+            scoreRepository.deleteAll();
+
+            response.put("success", true);
+            response.put("message", "All recommendation data cleared successfully");
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            response.put("success", false);
+            response.put("message", "Error clearing data: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+    }
+
+    /**
+     * Clear only similarity data (to recompute fresh similarities)
+     */
+    @DeleteMapping("/recommendations/clear-similarities")
+    public ResponseEntity<Map<String, Object>> clearSimilarities(Principal principal) {
+        Map<String, Object> response = new HashMap<>();
+
+        if (principal == null) {
+            response.put("success", false);
+            response.put("message", "Unauthorized");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
+        }
+
+        UserDtls user = userService.getUserByEmail(principal.getName());
+        if (!"ROLE_ADMIN".equals(user.getRole())) {
+            response.put("success", false);
+            response.put("message", "Admin access required");
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
+        }
+
+        try {
+            similarityRepository.deleteAll();
+
+            response.put("success", true);
+            response.put("message", "Product similarities cleared. Run 'compute-similarities' to rebuild.");
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            response.put("success", false);
+            response.put("message", "Error clearing similarities: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+    }
+
+    /**
+     * Clear only user scores (to recompute fresh personalized recommendations)
+     */
+    @DeleteMapping("/recommendations/clear-user-scores")
+    public ResponseEntity<Map<String, Object>> clearUserScores(Principal principal) {
+        Map<String, Object> response = new HashMap<>();
+
+        if (principal == null) {
+            response.put("success", false);
+            response.put("message", "Unauthorized");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
+        }
+
+        UserDtls user = userService.getUserByEmail(principal.getName());
+        if (!"ROLE_ADMIN".equals(user.getRole())) {
+            response.put("success", false);
+            response.put("message", "Admin access required");
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
+        }
+
+        try {
+            scoreRepository.deleteAll();
+
+            response.put("success", true);
+            response.put("message", "User scores cleared. Run 'compute-all-user-scores' to rebuild.");
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            response.put("success", false);
+            response.put("message", "Error clearing user scores: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
     }
 }

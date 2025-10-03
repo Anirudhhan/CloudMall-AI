@@ -1,8 +1,8 @@
 "use client";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import axios from "axios";
 import Link from "next/link";
+import { ShoppingCart, Package, User, Settings, LogOut, ArrowRight } from "lucide-react";
 
 interface User {
   id: number;
@@ -45,26 +45,29 @@ export default function UserDashboard() {
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
-        const response = await axios.get(`${API_BASE}/api/user/dashboard`, {
-          withCredentials: true,
+        const response = await fetch(`${API_BASE}/api/user/dashboard`, {
+          credentials: 'include'
         });
         
-        if (!response.data.authenticated) {
+        const data = await response.json();
+        
+        if (!data.authenticated) {
           router.push("/sign-in");
           return;
         }
 
-        setDashboardData(response.data);
+        setDashboardData(data);
         
         // Fetch recent orders
         try {
-          const ordersResponse = await axios.get(`${API_BASE}/api/user/orders`, {
-            withCredentials: true,
+          const ordersResponse = await fetch(`${API_BASE}/api/user/orders`, {
+            credentials: 'include'
           });
           
-          if (ordersResponse.data.success) {
-            // Get only the 5 most recent orders
-            setRecentOrders(ordersResponse.data.orders.slice(0, 5));
+          const ordersData = await ordersResponse.json();
+          
+          if (ordersData.success) {
+            setRecentOrders(ordersData.orders.slice(0, 5));
           }
         } catch (orderError) {
           console.error("Error fetching orders:", orderError);
@@ -87,9 +90,14 @@ export default function UserDashboard() {
 
   const handleLogout = async () => {
     try {
-      await axios.post(`${API_BASE}/api/logout`, {}, { withCredentials: true });
-      localStorage.removeItem("user");
-      localStorage.removeItem("cartCount");
+      await fetch(`${API_BASE}/api/logout`, {
+        method: 'POST',
+        credentials: 'include'
+      });
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem("user");
+        localStorage.removeItem("cartCount");
+      }
       router.push("/sign-in");
     } catch (error) {
       console.error("Logout error:", error);
@@ -99,25 +107,25 @@ export default function UserDashboard() {
 
   const getStatusColor = (status: string) => {
     const statusLower = status.toLowerCase();
-    if (statusLower.includes("delivered")) return "bg-green-100 text-green-800";
-    if (statusLower.includes("cancelled")) return "bg-red-100 text-red-800";
-    if (statusLower.includes("progress") || statusLower.includes("packed")) return "bg-blue-100 text-blue-800";
-    if (statusLower.includes("delivery")) return "bg-yellow-100 text-yellow-800";
-    return "bg-gray-100 text-gray-800";
+    if (statusLower.includes("delivered")) return "bg-black text-white";
+    if (statusLower.includes("cancelled")) return "bg-red-600 text-white";
+    if (statusLower.includes("progress") || statusLower.includes("packed")) return "bg-gray-800 text-white";
+    if (statusLower.includes("delivery")) return "bg-gray-600 text-white";
+    return "bg-gray-200 text-black";
   };
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
+      <div className="min-h-screen flex items-center justify-center bg-white">
+        <div className="animate-spin rounded-full h-12 w-12 border-4 border-black border-t-transparent"></div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+      <div className="min-h-screen flex items-center justify-center bg-white">
+        <div className="bg-red-50 border-2 border-red-600 text-red-600 px-6 py-4 font-bold uppercase tracking-wider">
           {error}
         </div>
       </div>
@@ -125,43 +133,42 @@ export default function UserDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div className="min-h-screen bg-white">
       {/* Header */}
-      <header className="bg-white shadow-sm">
-        <div className="container mx-auto px-4 py-4">
+      <header className="bg-white border-b border-gray-200">
+        <div className="container mx-auto px-4 py-6">
           <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <Link href="/" className="text-2xl font-bold text-blue-600">
-                CloudMall
-              </Link>
-            </div>
-            <div className="flex items-center space-x-4">
-              <span className="text-sm text-gray-600">
-                Welcome, {dashboardData?.user?.name}
+            <Link href="/" className="text-2xl font-bold text-black uppercase tracking-widest">
+              CLOUDMALL
+            </Link>
+            <div className="flex items-center gap-6">
+              <span className="text-sm text-black font-bold uppercase tracking-wider">
+                {dashboardData?.user?.name}
               </span>
               <Link
                 href="/"
-                className="text-blue-600 hover:text-blue-700 text-sm"
+                className="text-black hover:underline text-sm font-bold uppercase tracking-wider"
               >
-                Continue Shopping
+                SHOP
               </Link>
               <button
                 onClick={handleLogout}
-                className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
+                className="flex items-center gap-2 bg-black text-white px-6 py-2 font-bold hover:bg-gray-900 uppercase tracking-wider text-sm"
               >
-                Logout
+                <LogOut className="w-4 h-4" />
+                LOGOUT
               </button>
             </div>
           </div>
         </div>
       </header>
 
-      <div className="container mx-auto px-4 py-8">
-        <div className="flex flex-col lg:flex-row gap-6">
+      <div className="container mx-auto px-4 py-12">
+        <div className="flex flex-col lg:flex-row gap-8">
           {/* Sidebar */}
-          <aside className="lg:w-64 bg-white rounded-lg shadow p-6">
-            <div className="text-center mb-6">
-              <div className="w-24 h-24 mx-auto bg-blue-100 rounded-full flex items-center justify-center mb-4 overflow-hidden">
+          <aside className="lg:w-72 bg-white border border-gray-200 p-8">
+            <div className="text-center mb-8 pb-8 border-b border-gray-200">
+              <div className="w-24 h-24 mx-auto bg-black rounded-full flex items-center justify-center mb-4 overflow-hidden">
                 {dashboardData?.user?.profileImage && dashboardData.user.profileImage !== "default.jpg" ? (
                   <img
                     src={`${API_BASE}/img/profile_img/${dashboardData.user.profileImage}`}
@@ -169,42 +176,42 @@ export default function UserDashboard() {
                     className="w-full h-full object-cover"
                   />
                 ) : (
-                  <span className="text-3xl text-blue-600">👤</span>
+                  <User className="w-12 h-12 text-white" />
                 )}
               </div>
-              <h3 className="font-semibold text-lg">{dashboardData?.user?.name}</h3>
-              <p className="text-sm text-gray-500">{dashboardData?.user?.email}</p>
+              <h3 className="font-bold text-lg text-black uppercase tracking-wider">{dashboardData?.user?.name}</h3>
+              <p className="text-sm text-gray-600 mt-1 uppercase tracking-wide">{dashboardData?.user?.email}</p>
             </div>
 
             <nav className="space-y-2">
               <Link
                 href="/user/dashboard"
-                className="block px-4 py-2 bg-blue-50 text-blue-600 rounded"
+                className="block px-4 py-3 bg-black text-white font-bold uppercase tracking-wider text-sm"
               >
-                Dashboard
+                DASHBOARD
               </Link>
               <Link
                 href="/user/orders"
-                className="block px-4 py-2 text-gray-700 hover:bg-gray-50 rounded"
+                className="block px-4 py-3 text-black hover:bg-gray-100 font-bold uppercase tracking-wider text-sm border border-gray-200"
               >
-                My Orders
+                MY ORDERS
               </Link>
               <Link
                 href="/user/cart"
-                className="block px-4 py-2 text-gray-700 hover:bg-gray-50 rounded flex justify-between items-center"
+                className="block px-4 py-3 text-black hover:bg-gray-100 font-bold uppercase tracking-wider text-sm border border-gray-200 flex justify-between items-center"
               >
-                <span>Shopping Cart</span>
+                <span>CART</span>
                 {dashboardData && dashboardData.cartCount > 0 && (
-                  <span className="bg-red-500 text-white text-xs rounded-full px-2 py-1">
+                  <span className="bg-red-600 text-white text-xs font-bold px-2 py-1">
                     {dashboardData.cartCount}
                   </span>
                 )}
               </Link>
               <Link
                 href="/user/profile"
-                className="block px-4 py-2 text-gray-700 hover:bg-gray-50 rounded"
+                className="block px-4 py-3 text-black hover:bg-gray-100 font-bold uppercase tracking-wider text-sm border border-gray-200"
               >
-                Profile Settings
+                PROFILE
               </Link>
             </nav>
           </aside>
@@ -212,120 +219,113 @@ export default function UserDashboard() {
           {/* Main Content */}
           <main className="flex-1">
             {/* Stats Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-              <div className="bg-white rounded-lg shadow p-6">
-                <div className="flex items-center">
-                  <div className="p-3 bg-blue-100 rounded-full">
-                    <span className="text-2xl">🛒</span>
-                  </div>
-                  <div className="ml-4">
-                    <h3 className="text-sm font-medium text-gray-500">Cart Items</h3>
-                    <p className="text-2xl font-bold text-gray-900">
-                      {dashboardData?.cartCount || 0}
-                    </p>
-                  </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+              <div className="bg-white border border-gray-200 p-8">
+                <div className="flex items-center justify-between mb-4">
+                  <ShoppingCart className="w-8 h-8 text-black" />
+                  <p className="text-4xl font-bold text-black">
+                    {dashboardData?.cartCount || 0}
+                  </p>
                 </div>
+                <h3 className="text-sm font-bold text-gray-600 uppercase tracking-widest mb-2">CART ITEMS</h3>
                 <Link
                   href="/user/cart"
-                  className="mt-4 block text-center text-blue-600 text-sm hover:underline"
+                  className="mt-4 flex items-center gap-2 text-black hover:underline font-bold text-sm uppercase tracking-wider"
                 >
-                  View Cart
+                  VIEW CART
+                  <ArrowRight className="w-4 h-4" />
                 </Link>
               </div>
 
-              <div className="bg-white rounded-lg shadow p-6">
-                <div className="flex items-center">
-                  <div className="p-3 bg-green-100 rounded-full">
-                    <span className="text-2xl">📦</span>
-                  </div>
-                  <div className="ml-4">
-                    <h3 className="text-sm font-medium text-gray-500">Total Orders</h3>
-                    <p className="text-2xl font-bold text-gray-900">
-                      {recentOrders.length}
-                    </p>
-                  </div>
+              <div className="bg-white border border-gray-200 p-8">
+                <div className="flex items-center justify-between mb-4">
+                  <Package className="w-8 h-8 text-black" />
+                  <p className="text-4xl font-bold text-black">
+                    {recentOrders.length}
+                  </p>
                 </div>
+                <h3 className="text-sm font-bold text-gray-600 uppercase tracking-widest mb-2">TOTAL ORDERS</h3>
                 <Link
                   href="/user/orders"
-                  className="mt-4 block text-center text-blue-600 text-sm hover:underline"
+                  className="mt-4 flex items-center gap-2 text-black hover:underline font-bold text-sm uppercase tracking-wider"
                 >
-                  View All Orders
+                  VIEW ALL
+                  <ArrowRight className="w-4 h-4" />
                 </Link>
               </div>
 
-              <div className="bg-white rounded-lg shadow p-6">
-                <div className="flex items-center">
-                  <div className="p-3 bg-purple-100 rounded-full">
-                    <span className="text-2xl">⭐</span>
-                  </div>
-                  <div className="ml-4">
-                    <h3 className="text-sm font-medium text-gray-500">Member Since</h3>
-                    <p className="text-lg font-bold text-gray-900">
-                      2024
-                    </p>
-                  </div>
+              <div className="bg-white border border-gray-200 p-8">
+                <div className="flex items-center justify-between mb-4">
+                  <User className="w-8 h-8 text-black" />
+                  <p className="text-4xl font-bold text-black">2024</p>
                 </div>
+                <h3 className="text-sm font-bold text-gray-600 uppercase tracking-widest mb-2">MEMBER SINCE</h3>
               </div>
             </div>
 
             {/* Quick Actions */}
-            <div className="bg-white rounded-lg shadow mb-8">
-              <div className="p-6">
-                <h2 className="text-xl font-bold text-gray-800 mb-4">Quick Actions</h2>
+            <div className="bg-white border border-gray-200 mb-12">
+              <div className="p-8 border-b border-gray-200">
+                <h2 className="text-xl font-bold text-black uppercase tracking-widest">QUICK ACTIONS</h2>
+              </div>
+              <div className="p-8">
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                   <Link
-                    href="/products"
-                    className="flex items-center justify-center p-4 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 transition duration-200"
+                    href="/product"
+                    className="flex flex-col items-center justify-center p-6 bg-white border-2 border-black hover:bg-black hover:text-white transition-all group"
                   >
-                    <span className="mr-2">🛍️</span>
-                    Browse Products
+                    <ShoppingCart className="w-8 h-8 mb-3 group-hover:text-white" />
+                    <span className="font-bold uppercase tracking-wider text-sm">BROWSE</span>
                   </Link>
                   <Link
                     href="/user/cart"
-                    className="flex items-center justify-center p-4 bg-green-50 border border-green-200 rounded-lg hover:bg-green-100 transition duration-200"
+                    className="flex flex-col items-center justify-center p-6 bg-white border-2 border-black hover:bg-black hover:text-white transition-all group"
                   >
-                    <span className="mr-2">🛒</span>
-                    View Cart
+                    <ShoppingCart className="w-8 h-8 mb-3 group-hover:text-white" />
+                    <span className="font-bold uppercase tracking-wider text-sm">VIEW CART</span>
                   </Link>
                   <Link
                     href="/user/orders"
-                    className="flex items-center justify-center p-4 bg-yellow-50 border border-yellow-200 rounded-lg hover:bg-yellow-100 transition duration-200"
+                    className="flex flex-col items-center justify-center p-6 bg-white border-2 border-black hover:bg-black hover:text-white transition-all group"
                   >
-                    <span className="mr-2">📦</span>
-                    Track Orders
+                    <Package className="w-8 h-8 mb-3 group-hover:text-white" />
+                    <span className="font-bold uppercase tracking-wider text-sm">TRACK</span>
                   </Link>
                   <Link
                     href="/user/profile"
-                    className="flex items-center justify-center p-4 bg-purple-50 border border-purple-200 rounded-lg hover:bg-purple-100 transition duration-200"
+                    className="flex flex-col items-center justify-center p-6 bg-white border-2 border-black hover:bg-black hover:text-white transition-all group"
                   >
-                    <span className="mr-2">⚙️</span>
-                    Edit Profile
+                    <Settings className="w-8 h-8 mb-3 group-hover:text-white" />
+                    <span className="font-bold uppercase tracking-wider text-sm">SETTINGS</span>
                   </Link>
                 </div>
               </div>
             </div>
 
             {/* Recent Orders */}
-            <div className="bg-white rounded-lg shadow">
-              <div className="p-6">
-                <div className="flex justify-between items-center mb-4">
-                  <h2 className="text-xl font-bold text-gray-800">Recent Orders</h2>
+            <div className="bg-white border border-gray-200 mb-12">
+              <div className="p-8 border-b border-gray-200">
+                <div className="flex justify-between items-center">
+                  <h2 className="text-xl font-bold text-black uppercase tracking-widest">RECENT ORDERS</h2>
                   <Link
                     href="/user/orders"
-                    className="text-blue-600 hover:text-blue-700 text-sm"
+                    className="text-black hover:underline text-sm font-bold uppercase tracking-wider flex items-center gap-2"
                   >
-                    View All
+                    VIEW ALL
+                    <ArrowRight className="w-4 h-4" />
                   </Link>
                 </div>
-                
+              </div>
+              
+              <div className="p-8">
                 {recentOrders.length === 0 ? (
-                  <div className="text-center py-8">
-                    <p className="text-gray-500 mb-4">No orders yet</p>
+                  <div className="text-center py-12">
+                    <p className="text-gray-600 mb-6 uppercase tracking-wider">NO ORDERS YET</p>
                     <Link
-                      href="/products"
-                      className="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700"
+                      href="/product"
+                      className="inline-block bg-black text-white px-8 py-3 font-bold hover:bg-gray-900 uppercase tracking-widest text-sm"
                     >
-                      Start Shopping
+                      START SHOPPING
                     </Link>
                   </div>
                 ) : (
@@ -333,14 +333,14 @@ export default function UserDashboard() {
                     {recentOrders.map((order) => (
                       <div
                         key={order.id}
-                        className="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition duration-200"
+                        className="border border-gray-200 p-6 hover:border-black transition-all"
                       >
-                        <div className="flex flex-col md:flex-row md:items-center md:justify-between">
-                          <div className="mb-2 md:mb-0">
-                            <h3 className="font-semibold text-gray-800">
-                              Order #{order.orderId}
+                        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                          <div>
+                            <h3 className="font-bold text-black uppercase tracking-wider mb-1">
+                              #{order.orderId}
                             </h3>
-                            <p className="text-sm text-gray-500">
+                            <p className="text-sm text-gray-600 uppercase tracking-wide">
                               {new Date(order.orderDate).toLocaleDateString('en-US', {
                                 year: 'numeric',
                                 month: 'long',
@@ -348,17 +348,17 @@ export default function UserDashboard() {
                               })}
                             </p>
                           </div>
-                          <div className="flex items-center space-x-4">
+                          <div className="flex items-center gap-4">
                             <div className="text-right">
-                              <p className="font-semibold text-gray-800">
-                                ${order.totalAmount?.toFixed(2) || '0.00'}
+                              <p className="font-bold text-black text-lg">
+                                RS.{order.totalAmount?.toFixed(2) || '0.00'}
                               </p>
-                              <p className="text-sm text-gray-500">
-                                {order.itemCount} item(s)
+                              <p className="text-sm text-gray-600 uppercase tracking-wide">
+                                {order.itemCount} ITEM(S)
                               </p>
                             </div>
                             <span
-                              className={`px-3 py-1 rounded-full text-xs font-semibold ${getStatusColor(
+                              className={`px-4 py-2 text-xs font-bold uppercase tracking-wider ${getStatusColor(
                                 order.status
                               )}`}
                             >
@@ -366,9 +366,9 @@ export default function UserDashboard() {
                             </span>
                             <Link
                               href={`/user/orders/${order.id}`}
-                              className="text-blue-600 hover:text-blue-700 text-sm"
+                              className="text-black hover:underline text-sm font-bold uppercase tracking-wider"
                             >
-                              View Details
+                              VIEW
                             </Link>
                           </div>
                         </div>
@@ -380,30 +380,33 @@ export default function UserDashboard() {
             </div>
 
             {/* Account Information */}
-            <div className="bg-white rounded-lg shadow mt-6">
-              <div className="p-6">
-                <h2 className="text-xl font-bold text-gray-800 mb-4">Account Information</h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="p-4 bg-gray-50 rounded">
-                    <p className="text-sm text-gray-500 mb-1">Email</p>
-                    <p className="font-medium">{dashboardData?.user?.email}</p>
+            <div className="bg-white border border-gray-200">
+              <div className="p-8 border-b border-gray-200">
+                <h2 className="text-xl font-bold text-black uppercase tracking-widest">ACCOUNT INFORMATION</h2>
+              </div>
+              <div className="p-8">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="p-6 bg-gray-50">
+                    <p className="text-xs text-gray-600 mb-2 font-bold uppercase tracking-widest">EMAIL</p>
+                    <p className="font-medium text-black">{dashboardData?.user?.email}</p>
                   </div>
-                  <div className="p-4 bg-gray-50 rounded">
-                    <p className="text-sm text-gray-500 mb-1">Mobile Number</p>
-                    <p className="font-medium">{dashboardData?.user?.mobileNumber}</p>
+                  <div className="p-6 bg-gray-50">
+                    <p className="text-xs text-gray-600 mb-2 font-bold uppercase tracking-widest">MOBILE</p>
+                    <p className="font-medium text-black">{dashboardData?.user?.mobileNumber}</p>
                   </div>
-                  <div className="p-4 bg-gray-50 rounded md:col-span-2">
-                    <p className="text-sm text-gray-500 mb-1">Address</p>
-                    <p className="font-medium">
+                  <div className="p-6 bg-gray-50 md:col-span-2">
+                    <p className="text-xs text-gray-600 mb-2 font-bold uppercase tracking-widest">ADDRESS</p>
+                    <p className="font-medium text-black">
                       {dashboardData?.user?.address}, {dashboardData?.user?.city}, {dashboardData?.user?.state} - {dashboardData?.user?.pincode}
                     </p>
                   </div>
                 </div>
                 <Link
                   href="/user/profile"
-                  className="mt-4 inline-block text-blue-600 hover:text-blue-700 text-sm"
+                  className="mt-6 inline-flex items-center gap-2 text-black hover:underline text-sm font-bold uppercase tracking-wider"
                 >
-                  Edit Information →
+                  EDIT INFORMATION
+                  <ArrowRight className="w-4 h-4" />
                 </Link>
               </div>
             </div>

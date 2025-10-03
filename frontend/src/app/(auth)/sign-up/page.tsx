@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import axios from "axios";
+import { X, Upload } from "lucide-react";
 
 export default function SignUpPage() {
   const [formData, setFormData] = useState({
@@ -15,15 +15,15 @@ export default function SignUpPage() {
     state: "",
     pincode: "",
   });
-  const [profileImage, setProfileImage] = useState<File | null>(null);
+  const [profileImage, setProfileImage] = useState(null);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const [imagePreview, setImagePreview] = useState<string>("");
+  const [imagePreview, setImagePreview] = useState("");
   
   const router = useRouter();
   const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8080";
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
@@ -31,10 +31,10 @@ export default function SignUpPage() {
     }));
   };
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageChange = (e) => {
     const file = e.target.files?.[0];
     if (file) {
-      if (file.size > 5 * 1024 * 1024) { // 5MB limit
+      if (file.size > 5 * 1024 * 1024) {
         setError("Image size should be less than 5MB");
         return;
       }
@@ -47,10 +47,9 @@ export default function SignUpPage() {
 
       setProfileImage(file);
       
-      // Create preview
       const reader = new FileReader();
       reader.onload = (e) => {
-        setImagePreview(e.target?.result as string);
+        setImagePreview(e.target?.result);
       };
       reader.readAsDataURL(file);
       setError("");
@@ -109,7 +108,7 @@ export default function SignUpPage() {
     return true;
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     
     if (!validateForm()) {
@@ -120,7 +119,6 @@ export default function SignUpPage() {
     setError("");
 
     try {
-      // Create FormData for multipart request
       const formDataToSend = new FormData();
       formDataToSend.append("name", formData.name);
       formDataToSend.append("email", formData.email);
@@ -135,220 +133,229 @@ export default function SignUpPage() {
         formDataToSend.append("img", profileImage);
       }
 
-      const response = await axios.post(`${API_BASE}/api/register`, formDataToSend, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-        withCredentials: true,
+      const response = await fetch(`${API_BASE}/api/register`, {
+        method: 'POST',
+        body: formDataToSend,
+        credentials: 'include'
       });
 
-      if (response.data.success) {
-        // Registration successful
+      const data = await response.json();
+
+      if (data.success) {
         alert("Registration successful! Please login to continue.");
         router.push("/sign-in");
       } else {
-        setError(response.data.message || "Registration failed");
+        setError(data.message || "Registration failed");
       }
-    } catch (err: any) {
+    } catch (err) {
       console.error("Registration error:", err);
-      
-      if (err.response?.data?.message) {
-        setError(err.response.data.message);
-      } else if (err.response?.status === 409) {
-        setError("Email already exists. Please use a different email.");
-      } else {
-        setError("Network error. Please try again.");
-      }
+      setError("Network error. Please try again.");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <section className="min-h-screen bg-gray-100 py-8">
+    <div className="min-h-screen bg-white py-12">
       <div className="container mx-auto px-4">
-        <div className="max-w-2xl mx-auto bg-white shadow-lg rounded-lg p-8">
-          <h2 className="text-3xl font-bold text-center mb-8">Create Account</h2>
+        <div className="max-w-2xl mx-auto bg-white border-2 border-black p-12">
+          <div className="text-center mb-10">
+            <h2 className="text-3xl font-bold text-black uppercase tracking-widest mb-3">CREATE ACCOUNT</h2>
+            <p className="text-gray-600 text-sm uppercase tracking-wider">JOIN CLOUDMALL TODAY</p>
+          </div>
 
           {error && (
-            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-6">
-              {error}
+            <div className="bg-red-50 border-2 border-red-600 text-red-600 px-4 py-3 mb-6 text-sm font-bold uppercase tracking-wide flex items-center justify-between">
+              <span>{error}</span>
+              <button onClick={() => setError("")}>
+                <X className="w-4 h-4" />
+              </button>
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <div className="space-y-6">
             {/* Profile Image */}
-            <div className="text-center">
-              <label className="block text-gray-700 font-medium mb-2">Profile Picture (Optional)</label>
+            <div className="text-center pb-6 border-b border-gray-200">
+              <label className="block text-xs font-bold text-black mb-4 uppercase tracking-widest">PROFILE PICTURE (OPTIONAL)</label>
               <div className="flex flex-col items-center">
-                {imagePreview && (
+                {imagePreview ? (
                   <img 
                     src={imagePreview} 
                     alt="Preview" 
-                    className="w-24 h-24 rounded-full object-cover mb-4 border-2 border-gray-300"
+                    className="w-24 h-24 object-cover mb-4 border-2 border-black"
                   />
+                ) : (
+                  <div className="w-24 h-24 bg-gray-100 border-2 border-black flex items-center justify-center mb-4">
+                    <Upload className="w-8 h-8 text-gray-400" />
+                  </div>
                 )}
                 <input
                   type="file"
                   accept="image/*"
                   onChange={handleImageChange}
                   disabled={loading}
-                  className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                  className="block w-full rounded text-sm text-black file:mr-4 file:py-2 file:px-4 file:border-2 file:border-black file:text-sm file:font-bold file:bg-white file:text-black hover:file:bg-black hover:file:text-white file:uppercase file:tracking-wider"
                 />
-                <p className="text-sm text-gray-500 mt-1">Max size: 5MB (JPEG, PNG, GIF)</p>
+                <p className="text-xs text-gray-600 mt-2 uppercase tracking-wide">MAX SIZE: 5MB</p>
               </div>
             </div>
 
             {/* Personal Information */}
-            <div className="grid md:grid-cols-2 gap-4">
+            <div className="grid md:grid-cols-2 gap-6">
               <div>
-                <label className="block text-gray-700 font-medium mb-2">Full Name *</label>
+                <label className="block text-xs font-bold text-black mb-2 uppercase tracking-widest">FULL NAME *</label>
                 <input
                   type="text"
                   name="name"
                   value={formData.name}
                   onChange={handleInputChange}
-                  className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full border-2 border-black text-black px-4 py-3 focus:outline-none focus:border-gray-600 disabled:bg-gray-100"
                   required
                   disabled={loading}
-                  placeholder="Enter your full name"
+                  placeholder="ENTER YOUR NAME"
                 />
               </div>
               <div>
-                <label className="block text-gray-700 font-medium mb-2">Email Address *</label>
+                <label className="block text-xs font-bold text-black mb-2 uppercase tracking-widest">EMAIL ADDRESS *</label>
                 <input
                   type="email"
                   name="email"
                   value={formData.email}
                   onChange={handleInputChange}
-                  className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full border-2 rounded border-black text-black px-4 py-3 focus:outline-none focus:border-gray-600 disabled:bg-gray-100"
                   required
                   disabled={loading}
-                  placeholder="Enter your email"
+                  placeholder="YOUR@EMAIL.COM"
                 />
               </div>
             </div>
 
-            <div className="grid md:grid-cols-2 gap-4">
+            <div className="grid md:grid-cols-2 gap-6">
               <div>
-                <label className="block text-gray-700 font-medium mb-2">Mobile Number *</label>
+                <label className="block text-xs font-bold text-black mb-2 uppercase tracking-widest">MOBILE NUMBER *</label>
                 <input
                   type="tel"
                   name="mobileNumber"
                   value={formData.mobileNumber}
                   onChange={handleInputChange}
-                  className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full border-2 rounded border-black text-black px-4 py-3 focus:outline-none focus:border-gray-600 disabled:bg-gray-100"
                   required
                   disabled={loading}
-                  placeholder="10-digit mobile number"
+                  placeholder="10 DIGITS"
                 />
               </div>
               <div>
-                <label className="block text-gray-700 font-medium mb-2">Password *</label>
+                <label className="block text-xs font-bold text-black mb-2 uppercase tracking-widest">PASSWORD *</label>
                 <input
                   type="password"
                   name="password"
                   value={formData.password}
                   onChange={handleInputChange}
-                  className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full border-2 border-black text-black px-4 py-3 focus:outline-none focus:border-gray-600 disabled:bg-gray-100"
                   required
                   disabled={loading}
-                  placeholder="Minimum 6 characters"
+                  placeholder="MIN 6 CHARACTERS"
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-gray-700 font-medium mb-2">Confirm Password *</label>
+              <label className="block text-xs font-bold text-black mb-2 uppercase tracking-widest">CONFIRM PASSWORD *</label>
               <input
                 type="password"
                 name="confirmPassword"
                 value={formData.confirmPassword}
                 onChange={handleInputChange}
-                className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full border-2 border-black text-black px-4 py-3 focus:outline-none focus:border-gray-600 disabled:bg-gray-100"
                 required
                 disabled={loading}
-                placeholder="Re-enter your password"
+                placeholder="RE-ENTER PASSWORD"
               />
             </div>
 
             {/* Address Information */}
-            <div>
-              <label className="block text-gray-700 font-medium mb-2">Address *</label>
-              <input
-                type="text"
-                name="address"
-                value={formData.address}
-                onChange={handleInputChange}
-                className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                required
-                disabled={loading}
-                placeholder="Enter your full address"
-              />
-            </div>
+            <div className="pt-6 border-t border-gray-200">
+              <h3 className="text-sm font-bold text-black mb-4 uppercase tracking-widest">ADDRESS DETAILS</h3>
+              
+              <div className="space-y-6">
+                <div>
+                  <label className="block text-xs font-bold text-black mb-2 uppercase tracking-widest">ADDRESS *</label>
+                  <input
+                    type="text"
+                    name="address"
+                    value={formData.address}
+                    onChange={handleInputChange}
+                    className="w-full border-2 border-black text-black px-4 py-3 focus:outline-none focus:border-gray-600 disabled:bg-gray-100"
+                    required
+                    disabled={loading}
+                    placeholder="FULL ADDRESS"
+                  />
+                </div>
 
-            <div className="grid md:grid-cols-3 gap-4">
-              <div>
-                <label className="block text-gray-700 font-medium mb-2">City *</label>
-                <input
-                  type="text"
-                  name="city"
-                  value={formData.city}
-                  onChange={handleInputChange}
-                  className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  required
-                  disabled={loading}
-                  placeholder="City"
-                />
-              </div>
-              <div>
-                <label className="block text-gray-700 font-medium mb-2">State *</label>
-                <input
-                  type="text"
-                  name="state"
-                  value={formData.state}
-                  onChange={handleInputChange}
-                  className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  required
-                  disabled={loading}
-                  placeholder="State"
-                />
-              </div>
-              <div>
-                <label className="block text-gray-700 font-medium mb-2">Pincode *</label>
-                <input
-                  type="text"
-                  name="pincode"
-                  value={formData.pincode}
-                  onChange={handleInputChange}
-                  className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  required
-                  disabled={loading}
-                  placeholder="6-digit pincode"
-                  maxLength={6}
-                />
+                <div className="grid md:grid-cols-3 gap-6">
+                  <div>
+                    <label className="block text-xs font-bold text-black mb-2 uppercase tracking-widest">CITY *</label>
+                    <input
+                      type="text"
+                      name="city"
+                      value={formData.city}
+                      onChange={handleInputChange}
+                      className="w-full border-2 border-black text-black px-4 py-3 focus:outline-none focus:border-gray-600 disabled:bg-gray-100"
+                      required
+                      disabled={loading}
+                      placeholder="CITY"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-black mb-2 uppercase tracking-widest">STATE *</label>
+                    <input
+                      type="text"
+                      name="state"
+                      value={formData.state}
+                      onChange={handleInputChange}
+                      className="w-full border-2 border-black text-black px-4 py-3 focus:outline-none focus:border-gray-600 disabled:bg-gray-100"
+                      required
+                      disabled={loading}
+                      placeholder="STATE"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-black mb-2 uppercase tracking-widest">PINCODE *</label>
+                    <input
+                      type="text"
+                      name="pincode"
+                      value={formData.pincode}
+                      onChange={handleInputChange}
+                      className="w-full border-2 border-black text-black px-4 py-3 focus:outline-none focus:border-gray-600 disabled:bg-gray-100"
+                      required
+                      disabled={loading}
+                      placeholder="6 DIGITS"
+                      maxLength={6}
+                    />
+                  </div>
+                </div>
               </div>
             </div>
 
             <button
-              type="submit"
+              onClick={handleSubmit}
               disabled={loading}
-              className="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 disabled:bg-blue-400 disabled:cursor-not-allowed font-medium text-lg"
+              className="w-full bg-black text-white py-4 hover:bg-gray-900 disabled:bg-gray-400 disabled:cursor-not-allowed font-bold text-sm uppercase tracking-widest"
             >
-              {loading ? "Creating Account..." : "Create Account"}
+              {loading ? "CREATING ACCOUNT..." : "CREATE ACCOUNT"}
             </button>
-          </form>
+          </div>
 
-          <div className="mt-6 text-center">
-            <p className="text-gray-600">
-              Already have an account?{" "}
-              <a href="/sign-in" className="text-blue-600 hover:underline font-medium">
-                Sign in here
+          <div className="mt-8 text-center pt-8 border-t border-gray-200">
+            <p className="text-sm text-gray-600 uppercase tracking-wide">
+              ALREADY HAVE AN ACCOUNT?{" "}
+              <a href="/sign-in" className="text-black hover:underline font-bold">
+                SIGN IN
               </a>
             </p>
           </div>
         </div>
       </div>
-    </section>
+    </div>
   );
 }
