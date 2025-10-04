@@ -13,17 +13,17 @@ import {
   Package,
 } from "lucide-react";
 import Link from "next/link";
+import { useAuth } from "../contexts/AuthContext";
 
-const API_BASE = "http://localhost:8080";
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8080";
 
 export default function Navbar() {
   const router = useRouter();
+  const { user, cartCount, loading, logout: contextLogout, updateCartCount } = useAuth(); // Added updateCartCount
   const [searchQuery, setSearchQuery] = useState("");
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
-  const [userData, setUserData] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -32,27 +32,6 @@ export default function Navbar() {
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
-
-  useEffect(() => {
-    fetchUserData();
-  }, []);
-
-  const fetchUserData = async () => {
-    try {
-      const response = await fetch(`${API_BASE}/api/user-info`, {
-        credentials: "include",
-      });
-      if (response.ok) {
-        const data = await response.json();
-        setUserData(data);
-      }
-    } catch (error) {
-      console.log("User not logged in");
-      setUserData(null);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -72,12 +51,30 @@ export default function Navbar() {
         method: "POST",
         credentials: "include",
       });
-      setUserData(null);
+      
+      // Clear localStorage
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem("user");
+        localStorage.removeItem("cartCount");
+      }
+      
+      // Update context - this will set both user and cartCount to null/0
+      contextLogout();
       setShowUserMenu(false);
+      setShowMobileMenu(false);
+      
       router.push("/");
       window.location.reload();
     } catch (error) {
       console.error("Logout error:", error);
+      
+      // Even if API fails, clear local state
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem("user");
+        localStorage.removeItem("cartCount");
+      }
+      contextLogout();
+      router.push("/");
     }
   };
 
@@ -89,9 +86,7 @@ export default function Navbar() {
     );
   }
 
-  const user = userData?.user;
-  const cartCount = userData?.countCart || 0;
-
+  // Only hide navbar if user is ADMIN
   if (user?.role === "ROLE_ADMIN") {
     return null;
   }
@@ -146,52 +141,42 @@ export default function Navbar() {
                 </button>
 
                 {showUserMenu && (
-                  <div className="absolute right-0 top-full mt-2 w-56 bg-white border border-gray-200 shadow-lg">
-                    <Link
-                      href={
-                        user.role === "ROLE_ADMIN"
-                          ? "/admin/profile"
-                          : "/user/profile"
-                      }
-                      className="block px-4 py-3 text-black hover:bg-gray-100 transition-colors text-sm uppercase tracking-wide"
-                    >
-                      <div className="flex items-center gap-3">
-                        <User className="w-4 h-4" />
-                        <span>My Profile</span>
-                      </div>
-                    </Link>
-                    <Link
-                      href="/user/orders"
-                      className="block px-4 py-3 text-black hover:bg-gray-100 transition-colors text-sm uppercase tracking-wide"
-                    >
-                      <div className="flex items-center gap-3">
-                        <Package className="w-4 h-4" />
-                        <span>Orders</span>
-                      </div>
-                    </Link>
-                    <Link
-                      href="/user/wishlist"
-                      className="block px-4 py-3 text-black hover:bg-gray-100 transition-colors text-sm uppercase tracking-wide"
-                    >
-                      <div className="flex items-center gap-3">
-                        <Heart className="w-4 h-4" />
-                        <span>Wishlist</span>
-                      </div>
-                    </Link>
-                    {user.role === "ROLE_ADMIN" && (
+                  <div className="absolute right-0 top-full pt-2 w-56">
+                    <div className="bg-white border border-gray-200 shadow-lg">
                       <Link
-                        href="/admin/dashboard"
-                        className="block px-4 py-3 text-black hover:bg-gray-100 transition-colors border-t border-gray-200 text-sm uppercase tracking-wide font-bold"
+                        href="/user/profile"
+                        className="block px-4 py-3 text-black hover:bg-gray-100 transition-colors text-sm uppercase tracking-wide"
                       >
-                        Admin Dashboard
+                        <div className="flex items-center gap-3">
+                          <User className="w-4 h-4" />
+                          <span>My Profile</span>
+                        </div>
                       </Link>
-                    )}
-                    <button
-                      onClick={handleLogout}
-                      className="w-full text-left px-4 py-3 hover:text-red-600 cursor-pointer text-black hover:bg-gray-100 transition-colors border-t border-gray-200 text-sm uppercase tracking-wide"
-                    >
-                      Logout
-                    </button>
+                      <Link
+                        href="/user/orders"
+                        className="block px-4 py-3 text-black hover:bg-gray-100 transition-colors text-sm uppercase tracking-wide"
+                      >
+                        <div className="flex items-center gap-3">
+                          <Package className="w-4 h-4" />
+                          <span>Orders</span>
+                        </div>
+                      </Link>
+                      <Link
+                        href="/user/wishlist"
+                        className="block px-4 py-3 text-black hover:bg-gray-100 transition-colors text-sm uppercase tracking-wide"
+                      >
+                        <div className="flex items-center gap-3">
+                          <Heart className="w-4 h-4" />
+                          <span>Wishlist</span>
+                        </div>
+                      </Link>
+                      <button
+                        onClick={handleLogout}
+                        className="w-full text-left px-4 py-3 hover:text-red-600 cursor-pointer text-black hover:bg-gray-100 transition-colors border-t border-gray-200 text-sm uppercase tracking-wide"
+                      >
+                        Logout
+                      </button>
+                    </div>
                   </div>
                 )}
               </div>
@@ -298,15 +283,11 @@ export default function Navbar() {
                     {user.name}
                   </p>
                   <p className="text-xs text-gray-600 uppercase tracking-wide">
-                    {user.role === "ROLE_ADMIN" ? "Admin" : "Customer"}
+                    Customer
                   </p>
                 </div>
                 <Link
-                  href={
-                    user.role === "ROLE_ADMIN"
-                      ? "/admin/profile"
-                      : "/user/profile"
-                  }
+                  href="/user/profile"
                   className="block px-4 py-3 text-black hover:bg-gray-100 uppercase text-sm tracking-wide"
                   onClick={() => setShowMobileMenu(false)}
                 >
@@ -331,19 +312,9 @@ export default function Navbar() {
                     </span>
                   )}
                 </Link>
-                {user.role === "ROLE_ADMIN" && (
-                  <Link
-                    href="/admin/dashboard"
-                    className="block px-4 py-3 text-black font-bold hover:bg-gray-100 border-t border-gray-200 mt-2 uppercase text-sm tracking-wide"
-                    onClick={() => setShowMobileMenu(false)}
-                  >
-                    Admin Dashboard
-                  </Link>
-                )}
                 <button
                   onClick={() => {
                     handleLogout();
-                    setShowMobileMenu(false);
                   }}
                   className="w-full text-left px-4 py-3 text-black hover:bg-gray-100 border-t border-gray-200 uppercase text-sm tracking-wide"
                 >

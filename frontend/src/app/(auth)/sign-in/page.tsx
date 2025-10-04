@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { X } from "lucide-react";
+import { useAuth } from "@/app/contexts/AuthContext";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -9,6 +10,7 @@ export default function LoginPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const router = useRouter();
+  const { refreshUser } = useAuth();
   const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8080";
 
   const handleLogin = async (e) => {
@@ -33,6 +35,9 @@ export default function LoginPage() {
           localStorage.setItem("user", JSON.stringify(data.user));
           localStorage.setItem("cartCount", data.cartCount.toString());
         }
+
+        // Refresh the auth context to update all components
+        await refreshUser();
 
         if (data.user.role === "ROLE_ADMIN") {
           router.push("/admin/dashboard");
@@ -66,7 +71,7 @@ export default function LoginPage() {
           </div>
         )}
 
-        <div className="space-y-6">
+        <form onSubmit={handleLogin} className="space-y-6">
           <div>
             <label className="block text-xs font-bold text-black mb-2 uppercase tracking-widest">EMAIL</label>
             <input
@@ -92,13 +97,13 @@ export default function LoginPage() {
           </div>
 
           <button
-            onClick={handleLogin}
+            type="submit"
             disabled={loading}
             className="w-full bg-black text-white py-4 font-bold hover:bg-gray-900 transition disabled:bg-gray-400 disabled:cursor-not-allowed uppercase tracking-widest text-sm"
           >
             {loading ? "LOGGING IN..." : "LOGIN"}
           </button>
-        </div>
+        </form>
 
         <div className="mt-8 text-center space-y-3 pt-8 border-t border-gray-200">
           <a href="/forgot-password" className="block text-sm text-black hover:underline font-bold uppercase tracking-wider">

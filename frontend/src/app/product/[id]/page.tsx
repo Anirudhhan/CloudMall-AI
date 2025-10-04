@@ -22,7 +22,7 @@ interface Toast {
   message: string;
   type: 'success' | 'error';
 }
-
+// TODO: CHECK IF THE RECOMMENDATION WORKING BOTH IN THIS AND AND PRODUCT/ PAGE
 export default function ProductDetailPage() {
   const params = useParams(); 
   const productId = params.id as string;

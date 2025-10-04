@@ -3,7 +3,6 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import axios from "axios";
 import Link from "next/link";
-
 interface DashboardStats {
   totalProducts: number;
   totalCategories: number;
@@ -86,107 +85,9 @@ export default function AdminDashboard() {
 
   return (
     <div className="min-h-screen bg-white">
-      {/* Header */}
-      <header className="border-b border-gray-300">
-        <div className="flex items-center justify-between px-6 py-4">
-          <div className="flex items-center">
-            <h1 className="text-2xl font-medium text-black">Admin Dashboard</h1>
-          </div>
-          <div className="flex items-center gap-6">
-            <span className="text-sm text-gray-600">
-              Welcome, {dashboardData?.user?.name}
-            </span>
-            <Link
-              href="/"
-              className="text-gray-700 hover:text-black text-sm font-light"
-            >
-              View Site
-            </Link>
-            <button
-              onClick={handleLogout}
-              className="border border-gray-300 text-gray-700 px-4 py-2 text-sm hover:bg-gray-50"
-            >
-              Logout
-            </button>
-          </div>
-        </div>
-      </header>
 
       <div className="flex">
-        {/* Sidebar */}
-        <aside className="w-64 border-r border-gray-300 min-h-screen">
-          <nav className="pt-6">
-            <div className="px-6 pb-4">
-              <h2 className="text-lg font-medium text-black">MANAGEMENT</h2>
-            </div>
-            <ul className="space-y-1">
-              <li>
-                <Link
-                  href="/admin/dashboard"
-                  className="flex items-center px-6 py-3 text-gray-700 hover:bg-gray-50 border-r-2 border-gray-700"
-                >
-                  <span className="mr-3 text-gray-600">📊</span>
-                  Dashboard
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/admin/categories"
-                  className="flex items-center px-6 py-3 text-gray-700 hover:bg-gray-50"
-                >
-                  <span className="mr-3 text-gray-600">📂</span>
-                  Categories
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/admin/products"
-                  className="flex items-center px-6 py-3 text-gray-700 hover:bg-gray-50"
-                >
-                  <span className="mr-3 text-gray-600">📦</span>
-                  Products
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/admin/orders"
-                  className="flex items-center px-6 py-3 text-gray-700 hover:bg-gray-50"
-                >
-                  <span className="mr-3 text-gray-600">🛒</span>
-                  Orders
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/admin/users"
-                  className="flex items-center px-6 py-3 text-gray-700 hover:bg-gray-50"
-                >
-                  <span className="mr-3 text-gray-600">👥</span>
-                  Users
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/admin/admins"
-                  className="flex items-center px-6 py-3 text-gray-700 hover:bg-gray-50"
-                >
-                  <span className="mr-3 text-gray-600">👨‍💼</span>
-                  Admins
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/admin/profile"
-                  className="flex items-center px-6 py-3 text-gray-700 hover:bg-gray-50"
-                >
-                  <span className="mr-3 text-gray-600">⚙️</span>
-                  Profile
-                </Link>
-              </li>
-            </ul>
-          </nav>
-        </aside>
-
+        
         {/* Main Content */}
         <main className="flex-1 p-6">
           {/* Stats Cards */}
