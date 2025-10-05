@@ -236,7 +236,7 @@ export default function CheckoutPage() {
                     name="name"
                     value={formData.name}
                     onChange={handleInputChange}
-                    className="w-full px-4 py-3 border border-gray-300 focus:border-black focus:outline-none"
+                    className="w-full px-4 text-black py-3 border border-gray-300 focus:border-black focus:outline-none"
                     placeholder="Enter your full name"
                   />
                 </div>
@@ -250,7 +250,7 @@ export default function CheckoutPage() {
                     name="mobileNo"
                     value={formData.mobileNo}
                     onChange={handleInputChange}
-                    className="w-full px-4 py-3 border border-gray-300 focus:border-black focus:outline-none"
+                    className="w-full px-4 text-black py-3 border border-gray-300 focus:border-black focus:outline-none"
                     placeholder="10 digit mobile number"
                     maxLength={10}
                   />
@@ -265,7 +265,7 @@ export default function CheckoutPage() {
                     name="email"
                     value={formData.email}
                     onChange={handleInputChange}
-                    className="w-full px-4 py-3 border border-gray-300 focus:border-black focus:outline-none"
+                    className="w-full px-4 text-black py-3 border border-gray-300 focus:border-black focus:outline-none"
                     placeholder="Enter your email"
                   />
                 </div>
@@ -279,7 +279,7 @@ export default function CheckoutPage() {
                     value={formData.address}
                     onChange={handleInputChange}
                     rows={3}
-                    className="w-full px-4 py-3 border border-gray-300 focus:border-black focus:outline-none resize-none"
+                    className="w-full px-4 text-black py-3 border border-gray-300 focus:border-black focus:outline-none resize-none"
                     placeholder="House no, Building name, Street, Area"
                   />
                 </div>
@@ -293,7 +293,7 @@ export default function CheckoutPage() {
                     name="city"
                     value={formData.city}
                     onChange={handleInputChange}
-                    className="w-full px-4 py-3 border border-gray-300 focus:border-black focus:outline-none"
+                    className="w-full px-4 text-black py-3 border border-gray-300 focus:border-black focus:outline-none"
                     placeholder="Enter city"
                   />
                 </div>
@@ -307,7 +307,7 @@ export default function CheckoutPage() {
                     name="state"
                     value={formData.state}
                     onChange={handleInputChange}
-                    className="w-full px-4 py-3 border border-gray-300 focus:border-black focus:outline-none"
+                    className="w-full px-4 text-black py-3 border border-gray-300 focus:border-black focus:outline-none"
                     placeholder="Enter state"
                   />
                 </div>
@@ -321,7 +321,7 @@ export default function CheckoutPage() {
                     name="pincode"
                     value={formData.pincode}
                     onChange={handleInputChange}
-                    className="w-full px-4 py-3 border border-gray-300 focus:border-black focus:outline-none"
+                    className="w-full px-4 text-black py-3 border border-gray-300 focus:border-black focus:outline-none"
                     placeholder="6 digit pincode"
                     maxLength={6}
                   />
