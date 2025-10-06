@@ -150,27 +150,27 @@ export default function HomePage() {
     <div className="min-h-screen bg-white">
       {/* Toast Notification */}
       {toast && (
-        <div className="fixed top-6 right-6 z-50 animate-slide-in">
+        <div className="fixed top-4 left-4 right-4 md:top-6 md:right-6 md:left-auto z-50 animate-slide-in">
           <div
-            className={`flex items-center gap-3 px-6 py-4 shadow-lg border-2 ${
+            className={`flex items-center gap-2 md:gap-3 px-4 md:px-6 py-3 md:py-4 shadow-lg border-2 ${
               toast.type === "success"
                 ? "bg-white border-black"
                 : "bg-red-50 border-red-600"
             }`}
           >
             {toast.type === "success" ? (
-              <Check className="w-5 h-5 text-black" />
+              <Check className="w-4 h-4 md:w-5 md:h-5 text-black flex-shrink-0" />
             ) : (
-              <X className="w-5 h-5 text-red-600" />
+              <X className="w-4 h-4 md:w-5 md:h-5 text-red-600 flex-shrink-0" />
             )}
             <span
-              className={`font-bold uppercase tracking-wider text-sm ${
+              className={`font-bold uppercase tracking-wider text-xs md:text-sm ${
                 toast.type === "success" ? "text-black" : "text-red-600"
               }`}
             >
               {toast.message}
             </span>
-            <button onClick={() => setToast(null)} className="ml-2">
+            <button onClick={() => setToast(null)} className="ml-auto flex-shrink-0">
               <X className="w-4 h-4" />
             </button>
           </div>
@@ -179,19 +179,19 @@ export default function HomePage() {
 
       {/* Hero Section */}
       <section
-        className="relative bg-cover bg-center bg-no-repeat text-white py-72 overflow-hidden"
-        style={{ backgroundImage: 'url("/banner.webp")' }} // use your full image
+        className="relative bg-cover bg-center bg-no-repeat text-white py-32 md:py-48 lg:py-72 overflow-hidden"
+        style={{ backgroundImage: 'url("/banner.webp")' }}
       >
         <div className="container mx-auto px-4">
-          <div className="flex justify-end">
-            <div className="max-w-lg text-left text-white">
-              <h1 className="text-5xl font-bold mb-4">CLOUDMALL.</h1>
-              <p className="text-lg mb-6">Functional. Modular. 2k25</p>
+          <div className="flex justify-center md:justify-end">
+            <div className="max-w-lg text-center md:text-left text-white">
+              <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-3 md:mb-4">CLOUDMALL.</h1>
+              <p className="text-base md:text-lg mb-4 md:mb-6">Functional. Modular. 2k25</p>
               <a
                 href="/product"
-                className="inline-flex items-center gap-2 bg-white text-black px-2 py-2 font-bold hover:bg-gray-100 transition-colors uppercase tracking-widest text-sm"
+                className="inline-flex items-center gap-2 bg-white text-black px-4 md:px-2 py-3 md:py-2 font-bold hover:bg-gray-100 transition-colors uppercase tracking-widest text-xs md:text-sm"
               >
-                Shop Now <ArrowRight className="w-5 h-5" />
+                Shop Now <ArrowRight className="w-4 h-4 md:w-5 md:h-5" />
               </a>
             </div>
           </div>
@@ -199,23 +199,23 @@ export default function HomePage() {
       </section>
 
       {/* Categories Section */}
-      <section className="py-20 bg-white">
+      <section className="py-12 md:py-16 lg:py-20 bg-white">
         <div className="container mx-auto px-4">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold text-black mb-3 uppercase tracking-widest">
+          <div className="text-center mb-8 md:mb-12 lg:mb-16">
+            <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold text-black mb-3 uppercase tracking-widest">
               SHOP BY CATEGORY
             </h2>
-            <div className="w-20 h-1 bg-black mx-auto"></div>
+            <div className="w-16 md:w-20 h-1 bg-black mx-auto"></div>
           </div>
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-6">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 md:gap-4 lg:gap-6">
             {homeData.categories.map((category) => (
               <Link
                 key={category.id}
                 href={`/product?category=${encodeURIComponent(category.name)}`}
                 className="group"
               >
-                <div className="bg-white border border-gray-200 p-6 hover:border-black transition-all duration-300">
-                  <div className="aspect-square relative mb-4 overflow-hidden bg-gray-50">
+                <div className="bg-white border border-gray-200 p-3 md:p-4 lg:p-6 hover:border-black transition-all duration-300">
+                  <div className="aspect-square relative mb-2 md:mb-3 lg:mb-4 overflow-hidden bg-gray-50">
                     <Image
                       src={`/categories/${category.imageName}`}
                       alt={category.name}
@@ -223,7 +223,7 @@ export default function HomePage() {
                       className="object-contain group-hover:scale-105 transition-transform duration-500"
                     />
                   </div>
-                  <h3 className="font-bold text-black text-center uppercase tracking-wide text-sm group-hover:underline">
+                  <h3 className="font-bold text-black text-center uppercase tracking-wide text-xs md:text-sm group-hover:underline">
                     {category.name}
                   </h3>
                 </div>
@@ -235,24 +235,24 @@ export default function HomePage() {
 
       {/* Trending Products */}
       {trendingProducts.length > 0 && (
-        <section className="py-20 bg-gray-50">
+        <section className="py-12 md:py-16 lg:py-20 bg-gray-50">
           <div className="container mx-auto px-4">
-            <div className="flex items-center justify-between mb-16">
+            <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-8 md:mb-12 lg:mb-16 gap-4">
               <div>
-                <h2 className="text-4xl font-bold text-black uppercase tracking-widest">
+                <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold text-black uppercase tracking-widest">
                   HOT DEALS
                 </h2>
-                <div className="w-20 h-1 bg-black mt-3"></div>
+                <div className="w-16 md:w-20 h-1 bg-black mt-3"></div>
               </div>
               <Link
                 href="/product"
-                className="text-black hover:underline font-bold flex items-center gap-2 uppercase tracking-wider text-sm"
+                className="text-black hover:underline font-bold flex items-center gap-2 uppercase tracking-wider text-xs md:text-sm"
               >
                 VIEW ALL
-                <ArrowRight className="w-5 h-5" />
+                <ArrowRight className="w-4 h-4 md:w-5 md:h-5" />
               </Link>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-5 lg:gap-6">
               {trendingProducts.map((product) => (
                 <div
                   key={product.id}
@@ -266,22 +266,22 @@ export default function HomePage() {
                       className="object-contain group-hover:scale-105 transition-transform duration-500"
                     />
                     {product.discount > 0 && (
-                      <div className="absolute top-3 left-3 bg-red-600 text-white px-3 py-1 font-bold text-xs uppercase tracking-wide">
+                      <div className="absolute top-2 left-2 md:top-3 md:left-3 bg-red-600 text-white px-2 py-1 md:px-3 font-bold text-xs uppercase tracking-wide">
                         {product.discount}% OFF
                       </div>
                     )}
                   </div>
-                  <div className="p-4">
+                  <div className="p-3 md:p-4">
                     <Link href={`/product/${product.id}`}>
-                      <h3 className="font-bold text-black mb-3 line-clamp-2 hover:underline uppercase text-sm tracking-wide">
+                      <h3 className="font-bold text-black mb-2 md:mb-3 line-clamp-2 hover:underline uppercase text-xs md:text-sm tracking-wide">
                         {product.title}
                       </h3>
                     </Link>
-                    <div className="flex items-baseline gap-2 mb-4">
-                      <span className="text-xl font-bold text-black">
+                    <div className="flex items-baseline gap-2 mb-3 md:mb-4">
+                      <span className="text-lg md:text-xl font-bold text-black">
                         RS.{product.discountPrice.toLocaleString()}
                       </span>
-                      <span className="text-sm text-gray-400 line-through">
+                      <span className="text-xs md:text-sm text-gray-400 line-through">
                         RS.{product.price.toLocaleString()}
                       </span>
                     </div>
@@ -290,9 +290,9 @@ export default function HomePage() {
                       disabled={
                         product.stock === 0 || addingToCart === product.id
                       }
-                      className="w-full bg-black text-white py-3 font-bold hover:bg-gray-900 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 uppercase tracking-wider text-xs"
+                      className="w-full bg-black text-white py-2.5 md:py-3 font-bold hover:bg-gray-900 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 uppercase tracking-wider text-xs"
                     >
-                      <ShoppingCart className="w-4 h-4" />
+                      <ShoppingCart className="w-3 h-3 md:w-4 md:h-4" />
                       {addingToCart === product.id
                         ? "ADDING..."
                         : product.stock === 0
@@ -308,15 +308,15 @@ export default function HomePage() {
       )}
 
       {/* Featured Products */}
-      <section className="py-20 bg-white">
+      <section className="py-12 md:py-16 lg:py-20 bg-white">
         <div className="container mx-auto px-4">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold text-black mb-3 uppercase tracking-widest">
+          <div className="text-center mb-8 md:mb-12 lg:mb-16">
+            <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold text-black mb-3 uppercase tracking-widest">
               FEATURED PRODUCTS
             </h2>
-            <div className="w-20 h-1 bg-black mx-auto"></div>
+            <div className="w-16 md:w-20 h-1 bg-black mx-auto"></div>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-5 lg:gap-6">
             {featuredProducts.map((product) => (
               <div
                 key={product.id}
@@ -330,28 +330,28 @@ export default function HomePage() {
                     className="object-contain group-hover:scale-105 transition-transform duration-500"
                   />
                   {product.discount > 0 && (
-                    <div className="absolute top-3 left-3 bg-red-600 text-white px-3 py-1 text-xs font-bold uppercase tracking-wide">
+                    <div className="absolute top-2 left-2 md:top-3 md:left-3 bg-red-600 text-white px-2 py-1 md:px-3 text-xs font-bold uppercase tracking-wide">
                       {product.discount}% OFF
                     </div>
                   )}
                 </div>
 
-                <div className="p-4">
+                <div className="p-3 md:p-4">
                   <span className="text-xs text-gray-600 font-bold uppercase tracking-wider">
                     {product.category}
                   </span>
                   <Link href={`/product/${product.id}`}>
-                    <h3 className="font-bold text-black my-2 line-clamp-2 hover:underline uppercase text-sm tracking-wide">
+                    <h3 className="font-bold text-black my-2 line-clamp-2 hover:underline uppercase text-xs md:text-sm tracking-wide">
                       {product.title}
                     </h3>
                   </Link>
 
-                  <div className="flex items-baseline gap-2 mb-4">
-                    <span className="text-xl font-bold text-black">
+                  <div className="flex items-baseline gap-2 mb-3 md:mb-4">
+                    <span className="text-lg md:text-xl font-bold text-black">
                       RS.{product.discountPrice.toLocaleString()}
                     </span>
                     {product.discount > 0 && (
-                      <span className="text-sm text-gray-400 line-through">
+                      <span className="text-xs md:text-sm text-gray-400 line-through">
                         RS.{product.price.toLocaleString()}
                       </span>
                     )}
@@ -383,35 +383,35 @@ export default function HomePage() {
             ))}
           </div>
 
-          <div className="text-center mt-16">
+          <div className="text-center mt-10 md:mt-12 lg:mt-16">
             <Link
               href="/product"
-              className="inline-flex items-center gap-3 bg-black text-white px-10 py-4 font-bold hover:bg-gray-900 transition-all uppercase tracking-widest text-sm"
+              className="inline-flex items-center gap-2 md:gap-3 bg-black text-white px-6 md:px-8 lg:px-10 py-3 md:py-4 font-bold hover:bg-gray-900 transition-all uppercase tracking-widest text-xs md:text-sm"
             >
               VIEW ALL PRODUCTS
-              <ArrowRight className="w-5 h-5" />
+              <ArrowRight className="w-4 h-4 md:w-5 md:h-5" />
             </Link>
           </div>
         </div>
       </section>
 
       {/* Footer */}
-      <footer className="bg-black text-white py-16 border-t border-gray-800">
+      <footer className="bg-black text-white py-10 md:py-12 lg:py-16 border-t border-gray-800">
         <div className="container mx-auto px-4">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-12">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8 md:gap-10 lg:gap-12 mb-8 md:mb-10 lg:mb-12">
             <div>
-              <h3 className="text-2xl font-bold mb-4 uppercase tracking-widest">
+              <h3 className="text-xl md:text-2xl font-bold mb-3 md:mb-4 uppercase tracking-widest">
                 CLOUDMALL
               </h3>
-              <p className="text-gray-400 text-sm uppercase tracking-wide">
+              <p className="text-gray-400 text-xs md:text-sm uppercase tracking-wide">
                 Premium Shopping Destination
               </p>
             </div>
             <div>
-              <h4 className="font-bold mb-4 uppercase tracking-wider text-sm">
+              <h4 className="font-bold mb-3 md:mb-4 uppercase tracking-wider text-xs md:text-sm">
                 QUICK LINKS
               </h4>
-              <ul className="space-y-2 text-gray-400 text-sm">
+              <ul className="space-y-2 text-gray-400 text-xs md:text-sm">
                 <li>
                   <Link
                     href="/product"
@@ -439,10 +439,10 @@ export default function HomePage() {
               </ul>
             </div>
             <div>
-              <h4 className="font-bold mb-4 uppercase tracking-wider text-sm">
+              <h4 className="font-bold mb-3 md:mb-4 uppercase tracking-wider text-xs md:text-sm">
                 SUPPORT
               </h4>
-              <ul className="space-y-2 text-gray-400 text-sm">
+              <ul className="space-y-2 text-gray-400 text-xs md:text-sm">
                 <li>
                   <Link
                     href="/help"
@@ -470,10 +470,10 @@ export default function HomePage() {
               </ul>
             </div>
             <div>
-              <h4 className="font-bold mb-4 uppercase tracking-wider text-sm">
+              <h4 className="font-bold mb-3 md:mb-4 uppercase tracking-wider text-xs md:text-sm">
                 CONNECT
               </h4>
-              <div className="flex gap-4 text-sm">
+              <div className="flex flex-col sm:flex-row gap-3 md:gap-4 text-xs md:text-sm">
                 <a
                   href="#"
                   className="hover:text-gray-400 transition-colors uppercase tracking-wide"
@@ -495,7 +495,7 @@ export default function HomePage() {
               </div>
             </div>
           </div>
-          <div className="border-t border-gray-800 pt-8 text-center text-gray-400 text-sm uppercase tracking-wide">
+          <div className="border-t border-gray-800 pt-6 md:pt-8 text-center text-gray-400 text-xs md:text-sm uppercase tracking-wide">
             <p>&copy; 2025 CLOUDMALL. ALL RIGHTS RESERVED.</p>
           </div>
         </div>

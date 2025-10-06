@@ -496,6 +496,7 @@ export default function ProductsSearchPage() {
                         className="absolute top-3 right-3 p-2 bg-white opacity-0 group-hover:opacity-100 transition-opacity"
                         onClick={(e) => e.stopPropagation()}
                       >
+                        {/* TODO: MAKE IT RESPONSIBLE */}
                         {/* TODO: MAKE THE SHOPPING CART WORKING AND WHEN DONE MAKE IT TICK */}
                         <ShoppingCart className="w-5 h-5 text-black" />
                       </button>
