@@ -255,7 +255,7 @@ export default function ProductsSearchPage() {
         <div className="flex gap-6 lg:gap-8">
           {/* Sidebar Filters - Mobile Overlay */}
           {showFilters && (
-            <div className="fixed inset-0 bg-black bg-opacity-50 z-50 lg:hidden" onClick={() => setShowFilters(false)}>
+            <div className="fixed inset-0  bg-opacity-50 z-50 lg:hidden" onClick={() => setShowFilters(false)}>
               <div className="absolute left-0 top-0 bottom-0 w-80 max-w-[85vw] bg-white overflow-y-auto" onClick={(e) => e.stopPropagation()}>
                 <div className="sticky top-0 bg-white border-b border-gray-200 px-4 py-4 flex items-center justify-between">
                   <h2 className="text-lg font-bold text-black uppercase tracking-wide">FILTER</h2>
@@ -357,7 +357,7 @@ export default function ProductsSearchPage() {
               <div className="flex items-center gap-3 md:gap-4">
                 <button
                   onClick={() => setShowFilters(!showFilters)}
-                  className="lg:hidden flex items-center gap-2 px-3 md:px-4 py-2 border border-gray-300 text-xs md:text-sm font-bold uppercase tracking-wide hover:bg-gray-50"
+                  className="lg:hidden text-black flex items-center gap-2 px-3 md:px-4 py-2 border border-gray-300 text-xs md:text-sm font-bold uppercase tracking-wide hover:bg-gray-50"
                 >
                   <SlidersHorizontal className="w-4 h-4" />
                   Filter
@@ -484,7 +484,7 @@ export default function ProductsSearchPage() {
                 <button
                   onClick={() => setCurrentPage(Math.max(0, currentPage - 1))}
                   disabled={currentPage === 0}
-                  className="px-4 md:px-6 py-2 border border-gray-300 text-xs md:text-sm font-bold uppercase tracking-wide hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed"
+                  className="px-4 md:px-6 py-2 border text-black border-gray-900 text-xs md:text-sm font-bold uppercase tracking-wide hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed"
                 >
                   Prev
                 </button>
@@ -496,10 +496,10 @@ export default function ProductsSearchPage() {
                       <button
                         key={pageNum}
                         onClick={() => setCurrentPage(pageNum)}
-                        className={`w-8 h-8 md:w-10 md:h-10 text-xs md:text-sm font-bold uppercase ${
+                        className={`w-8 h-8 md:w-10 md:h-10 text-xs md:text-sm font-bold uppercase cursor-pointer text-black ${
                           currentPage === pageNum
                             ? 'bg-black text-white'
-                            : 'border border-gray-300 hover:bg-gray-50'
+                            : 'border border-gray-400 hover:bg-gray-50'
                         }`}
                       >
                         {pageNum + 1}
@@ -510,7 +510,7 @@ export default function ProductsSearchPage() {
                 <button
                   onClick={() => setCurrentPage(Math.min(totalPages - 1, currentPage + 1))}
                   disabled={currentPage === totalPages - 1}
-                  className="px-4 md:px-6 py-2 border border-gray-300 text-xs md:text-sm font-bold uppercase tracking-wide hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed"
+                  className="px-4 md:px-6 py-2 border cursor-pointer text-black border-gray-900 text-xs md:text-sm font-bold uppercase tracking-wide hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed"
                 >
                   Next
                 </button>

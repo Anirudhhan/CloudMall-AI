@@ -190,12 +190,12 @@ export default function Navbar() {
               </Link>
             )}
 
-            <Link
+            {/* <Link
               href="/seller"
               className="text-black hover:bg-gray-100 px-4 py-2 transition-colors uppercase text-sm font-bold tracking-wide"
             >
               Sell
-            </Link>
+            </Link> */}
 
             <div className="relative group">
               <button className="flex items-center gap-1 text-black hover:bg-gray-100 px-4 py-2 transition-colors uppercase text-sm font-bold tracking-wide">
