@@ -112,7 +112,7 @@ export default function OrdersPage() {
     fetchOrders();
   }, []);
 
-  const fetchOrders = async () => {
+const fetchOrders = async () => {
     try {
       const response = await fetch(`${API_BASE}/api/user/orders`, {
         credentials: 'include'
@@ -120,7 +120,12 @@ export default function OrdersPage() {
 
       if (response.ok) {
         const data = await response.json();
-        setOrders(data.orders || []);
+        const sortedOrders = (data.orders || []).sort((a: Order, b: Order) => {
+          const dateA = new Date(a.orderDate).getTime();
+          const dateB = new Date(b.orderDate).getTime();
+          return dateB - dateA; 
+        });
+        setOrders(sortedOrders);
       } else if (response.status === 401) {
         router.push('/sign-in');
       } else {

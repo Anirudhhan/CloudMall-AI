@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Trash2, Plus, Minus, ShoppingBag, ArrowRight, Tag, Truck, Shield, ChevronRight, AlertCircle, X, CheckCircle } from 'lucide-react';
 import Link from 'next/link';
+import { useAuth } from '@/app/contexts/AuthContext';
 
 const API_BASE = 'http://localhost:8080';
 
@@ -29,6 +30,7 @@ interface Toast {
 
 export default function CartPage() {
   const router = useRouter();
+  const { user, updateCartCount } = useAuth();
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [totalOrderPrice, setTotalOrderPrice] = useState(0);
@@ -38,8 +40,13 @@ export default function CartPage() {
   const [itemToDelete, setItemToDelete] = useState<number | null>(null);
 
   useEffect(() => {
+    // Check if user is logged in
+    if (!user) {
+      router.push('/sign-in');
+      return;
+    }
     fetchCart();
-  }, []);
+  }, [user]);
 
   useEffect(() => {
     if (toast) {
@@ -60,6 +67,8 @@ export default function CartPage() {
         const data = await response.json();
         setCartItems(data.carts || []);
         setTotalOrderPrice(data.totalOrderPrice || 0);
+        // Update cart count in context
+        updateCartCount(data.carts?.length || 0);
       } else if (response.status === 401) {
         router.push('/sign-in');
       }

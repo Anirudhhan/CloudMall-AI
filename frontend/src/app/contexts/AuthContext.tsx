@@ -8,7 +8,6 @@ interface User {
   email: string;
   role: "ROLE_USER" | "ROLE_ADMIN";
 }
-//TODO: FIX THE CART MAKE IT LIVE
 interface AuthContextType {
   user: User | null;
   cartCount: number;  
