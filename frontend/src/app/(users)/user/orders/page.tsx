@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Package, Truck, CheckCircle, XCircle, Clock, AlertCircle, Eye, ShoppingBag } from 'lucide-react';
+import { Package, Truck, CheckCircle, XCircle, Clock, AlertCircle, Eye, ShoppingBag, X, MapPin, User, CreditCard, Calendar } from 'lucide-react';
 import Link from 'next/link';
 
 const API_BASE = 'http://localhost:8080';
@@ -13,15 +13,26 @@ interface Product {
   image: string;
   price: number;
   discountPrice: number;
+  category?: string;
 }
 
 interface OrderAddress {
-  name: string;
+  firstName?: string;
+  lastName?: string;
+  name?: string;
+  email?: string;
   mobileNo: string;
   address: string;
   city: string;
   state: string;
   pincode: string;
+}
+
+interface UserDetails {
+  id: number;
+  name: string;
+  email: string;
+  mobileNumber?: string;
 }
 
 interface Order {
@@ -34,6 +45,7 @@ interface Order {
   status: string;
   paymentType: string;
   orderAddress: OrderAddress;
+  user?: UserDetails;
 }
 
 const getStatusIcon = (status: string) => {
@@ -73,6 +85,17 @@ const formatDate = (dateString: string) => {
   });
 };
 
+const formatDateTime = (dateString: string) => {
+  const date = new Date(dateString);
+  return date.toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  });
+};
+
 export default function OrdersPage() {
   const router = useRouter();
   const [orders, setOrders] = useState<Order[]>([]);
@@ -82,6 +105,8 @@ export default function OrdersPage() {
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [selectedOrderId, setSelectedOrderId] = useState<number | null>(null);
   const [cancelError, setCancelError] = useState('');
+  const [showDetailsModal, setShowDetailsModal] = useState(false);
+  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
 
   useEffect(() => {
     fetchOrders();
@@ -107,6 +132,16 @@ export default function OrdersPage() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleViewDetails = (order: Order) => {
+    setSelectedOrder(order);
+    setShowDetailsModal(true);
+  };
+
+  const closeDetailsModal = () => {
+    setShowDetailsModal(false);
+    setSelectedOrder(null);
   };
 
   const handleCancelOrder = async (orderId: number) => {
@@ -281,26 +316,25 @@ export default function OrdersPage() {
                       Quantity: <span className="font-bold text-black">{order.quantity}</span>
                     </p>
 
-                    {/* Delivery Address */}
+                    {/* Delivery Address Preview */}
                     <div className="bg-gray-50 p-3 md:p-4 mb-3 md:mb-4">
                       <p className="text-xs font-bold text-black uppercase tracking-wide mb-2">Delivery Address</p>
                       <p className="text-xs md:text-sm text-gray-700">
-                        {order.orderAddress.name}<br />
+                        {order.orderAddress.name || `${order.orderAddress.firstName} ${order.orderAddress.lastName}`}<br />
                         {order.orderAddress.address}<br />
-                        {order.orderAddress.city}, {order.orderAddress.state} - {order.orderAddress.pincode}<br />
-                        Phone: {order.orderAddress.mobileNo}
+                        {order.orderAddress.city}, {order.orderAddress.state} - {order.orderAddress.pincode}
                       </p>
                     </div>
 
                     {/* Action Buttons */}
                     <div className="flex flex-col sm:flex-row flex-wrap gap-2 md:gap-3">
-                      <Link
-                        href={`/user/orders/${order.id}`}
+                      <button
+                        onClick={() => handleViewDetails(order)}
                         className="inline-flex items-center justify-center gap-2 px-4 md:px-6 py-2.5 md:py-3 bg-black text-white font-bold uppercase tracking-wide text-xs md:text-sm hover:bg-gray-900 transition-colors"
                       >
                         <Eye className="w-3 h-3 md:w-4 md:h-4" />
                         View Details
-                      </Link>
+                      </button>
 
                       {canCancelOrder(order.status) && (
                         <button
@@ -310,7 +344,7 @@ export default function OrdersPage() {
                         >
                           {cancellingOrder === order.id ? (
                             <>
-                              <div className="animate-spin rounded-full h-3 h-3 md:h-4 md:w-4 border-2 border-red-600 border-t-transparent"></div>
+                              <div className="animate-spin rounded-full h-3 w-3 md:h-4 md:w-4 border-2 border-red-600 border-t-transparent"></div>
                               Cancelling...
                             </>
                           ) : (
@@ -340,9 +374,139 @@ export default function OrdersPage() {
         </div>
       </div>
 
+      {/* Order Details Modal */}
+      {showDetailsModal && selectedOrder && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-50 p-0 sm:p-4">
+          <div className="bg-white border-0 sm:border-2 border-black w-full sm:max-w-3xl h-full sm:h-auto sm:max-h-[90vh] overflow-y-auto">
+            <div className="sticky top-0 bg-black px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between border-b-2 border-black z-10">
+              <h2 className="text-lg sm:text-2xl font-bold text-white uppercase tracking-wide sm:tracking-widest">ORDER DETAILS</h2>
+              <button
+                onClick={closeDetailsModal}
+                className="text-white hover:text-gray-300"
+              >
+                <X className="w-5 h-5 sm:w-6 sm:h-6" />
+              </button>
+            </div>
+
+            <div className="p-4 sm:p-6 md:p-8 space-y-6 sm:space-y-8">
+              {/* Order Info */}
+              <div className="bg-gray-50 p-4 sm:p-6">
+                <h3 className="font-bold text-black mb-3 sm:mb-4 uppercase tracking-wide sm:tracking-widest text-xs sm:text-sm">ORDER INFORMATION</h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 text-sm">
+                  <div>
+                    <p className="text-xs text-gray-600 font-bold uppercase tracking-wide sm:tracking-widest mb-1">ORDER ID</p>
+                    <p className="font-bold text-black text-sm break-all">{selectedOrder.orderId}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-600 font-bold uppercase tracking-wide sm:tracking-widest mb-1">ORDER DATE</p>
+                    <p className="font-bold text-black text-sm">
+                      {formatDateTime(selectedOrder.orderDate)}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-600 font-bold uppercase tracking-wide sm:tracking-widest mb-1">PAYMENT TYPE</p>
+                    <p className="font-bold text-black text-sm">{selectedOrder.paymentType}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-600 font-bold uppercase tracking-wide sm:tracking-widest mb-1">STATUS</p>
+                    <span className={`inline-flex px-2 sm:px-3 py-1 text-xs font-bold uppercase tracking-wide sm:tracking-wider border ${getStatusColor(selectedOrder.status)}`}>
+                      {selectedOrder.status}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Product Info */}
+              <div>
+                <h3 className="font-bold text-black mb-3 sm:mb-4 uppercase tracking-wide sm:tracking-widest text-xs sm:text-sm flex items-center gap-2">
+                  <ShoppingBag className="w-4 h-4 sm:w-5 sm:h-5" />
+                  PRODUCT DETAILS
+                </h3>
+                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4 bg-gray-50 p-3 sm:p-4">
+                  <img
+                    src={`/products/${selectedOrder.product.image}`}
+                    alt={selectedOrder.product.title}
+                    className="w-20 h-20 sm:w-24 sm:h-24 object-cover border border-gray-200 mx-auto sm:mx-0"
+                  />
+                  <div className="flex-1 w-full">
+                    <p className="font-bold text-black mb-1 sm:mb-2 uppercase tracking-wide text-sm sm:text-base">{selectedOrder.product.title}</p>
+                    {selectedOrder.product.category && (
+                      <p className="text-xs text-gray-600 mb-2 sm:mb-3 uppercase tracking-wide">{selectedOrder.product.category}</p>
+                    )}
+                    <div className="grid grid-cols-3 gap-3 sm:gap-6 text-xs sm:text-sm">
+                      <div>
+                        <p className="text-xs text-gray-600 font-bold uppercase tracking-wide sm:tracking-widest mb-1">PRICE</p>
+                        <p className="font-bold text-black">RS.{selectedOrder.price.toLocaleString()}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-gray-600 font-bold uppercase tracking-wide sm:tracking-widest mb-1">QTY</p>
+                        <p className="font-bold text-black">{selectedOrder.quantity}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-gray-600 font-bold uppercase tracking-wide sm:tracking-widest mb-1">TOTAL</p>
+                        <p className="font-bold text-black">
+                          RS.{(selectedOrder.price * selectedOrder.quantity).toLocaleString()}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Delivery Address */}
+              <div>
+                <h3 className="font-bold text-black mb-3 sm:mb-4 uppercase tracking-wide sm:tracking-widest text-xs sm:text-sm flex items-center gap-2">
+                  <MapPin className="w-4 h-4 sm:w-5 sm:h-5" />
+                  DELIVERY ADDRESS
+                </h3>
+                <div className="bg-gray-50 p-3 sm:p-4 text-xs sm:text-sm">
+                  <p className="font-bold text-black mb-2 uppercase tracking-wide">
+                    {selectedOrder.orderAddress.name || `${selectedOrder.orderAddress.firstName} ${selectedOrder.orderAddress.lastName}`}
+                  </p>
+                  <p className="text-black mb-1 leading-relaxed">{selectedOrder.orderAddress.address}</p>
+                  <p className="text-black mb-3">
+                    {selectedOrder.orderAddress.city}, {selectedOrder.orderAddress.state} - {selectedOrder.orderAddress.pincode}
+                  </p>
+                  {selectedOrder.orderAddress.email && (
+                    <p className="text-gray-600 text-xs uppercase tracking-wide mb-1">
+                      EMAIL: {selectedOrder.orderAddress.email}
+                    </p>
+                  )}
+                  <p className="text-gray-600 text-xs uppercase tracking-wide">
+                    MOBILE: {selectedOrder.orderAddress.mobileNo}
+                  </p>
+                </div>
+              </div>
+
+              {/* Payment Summary */}
+              <div className="bg-gray-50 p-4 sm:p-6">
+                <h3 className="font-bold text-black mb-3 sm:mb-4 uppercase tracking-wide sm:tracking-widest text-xs sm:text-sm flex items-center gap-2">
+                  <CreditCard className="w-4 h-4 sm:w-5 sm:h-5" />
+                  PAYMENT SUMMARY
+                </h3>
+                <div className="space-y-2 text-xs sm:text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Subtotal</span>
+                    <span className="text-black font-bold">RS.{(selectedOrder.price * selectedOrder.quantity).toLocaleString()}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Delivery Charges</span>
+                    <span className="text-green-600 font-bold">FREE</span>
+                  </div>
+                  <div className="flex justify-between pt-2 border-t-2 border-gray-200">
+                    <span className="text-black font-bold">Total Amount</span>
+                    <span className="text-black font-bold text-base sm:text-lg">RS.{(selectedOrder.price * selectedOrder.quantity).toLocaleString()}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Cancel Order Modal */}
       {showCancelModal && (
-        <div className="fixed inset-0 bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-white max-w-md w-full border-2 border-black">
             <div className="bg-black text-white px-4 md:px-6 py-3 md:py-4">
               <h2 className="text-lg md:text-xl font-bold uppercase tracking-wide">Cancel Order</h2>
