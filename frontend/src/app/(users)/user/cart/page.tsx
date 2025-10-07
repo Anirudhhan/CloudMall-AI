@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Trash2, Plus, Minus, ShoppingBag, ArrowRight, Tag, Truck, Shield, ChevronRight } from 'lucide-react';
+import { Trash2, Plus, Minus, ShoppingBag, ArrowRight, Tag, Truck, Shield, ChevronRight, AlertCircle, X, CheckCircle } from 'lucide-react';
 import Link from 'next/link';
 
 const API_BASE = 'http://localhost:8080';
@@ -22,16 +22,33 @@ interface CartItem {
   totalPrice: number;
 }
 
+interface Toast {
+  message: string;
+  type: 'success' | 'error';
+}
+
 export default function CartPage() {
   const router = useRouter();
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [totalOrderPrice, setTotalOrderPrice] = useState(0);
   const [updatingItem, setUpdatingItem] = useState<number | null>(null);
+  const [toast, setToast] = useState<Toast | null>(null);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [itemToDelete, setItemToDelete] = useState<number | null>(null);
 
   useEffect(() => {
     fetchCart();
   }, []);
+
+  useEffect(() => {
+    if (toast) {
+      const timer = setTimeout(() => {
+        setToast(null);
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [toast]);
 
   const fetchCart = async () => {
     try {
@@ -78,14 +95,17 @@ export default function CartPage() {
     }
   };
 
-  const removeItem = async (cartId: number) => {
-    if (!confirm('Are you sure you want to remove this item from cart?')) {
-      return;
-    }
+  const handleRemoveItem = (cartId: number) => {
+    setItemToDelete(cartId);
+    setShowDeleteModal(true);
+  };
+
+  const confirmRemoveItem = async () => {
+    if (itemToDelete === null) return;
     
-    setUpdatingItem(cartId);
+    setUpdatingItem(itemToDelete);
     try {
-      const response = await fetch(`${API_BASE}/api/user/cart/${cartId}`, {
+      const response = await fetch(`${API_BASE}/api/user/cart/${itemToDelete}`, {
         method: 'DELETE',
         credentials: 'include',
         headers: {
@@ -96,17 +116,25 @@ export default function CartPage() {
       if (response.ok) {
         const data = await response.json();
         console.log('Item removed:', data);
+        setShowDeleteModal(false);
+        setItemToDelete(null);
         await fetchCart();
+        setToast({ message: 'ITEM REMOVED FROM CART', type: 'success' });
       } else {
         console.error('Failed to remove item:', response.status);
-        alert('Failed to remove item from cart');
+        setToast({ message: 'FAILED TO REMOVE ITEM', type: 'error' });
       }
     } catch (error) {
       console.error('Error removing item:', error);
-      alert('Error removing item from cart');
+      setToast({ message: 'ERROR REMOVING ITEM', type: 'error' });
     } finally {
       setUpdatingItem(null);
     }
+  };
+
+  const closeDeleteModal = () => {
+    setShowDeleteModal(false);
+    setItemToDelete(null);
   };
 
   const proceedToCheckout = () => {
@@ -156,6 +184,86 @@ export default function CartPage() {
 
   return (
     <div className="min-h-screen bg-white py-6 md:py-8">
+      {/* Toast Notification */}
+      {toast && (
+        <div className="fixed top-4 left-4 right-4 md:top-6 md:right-6 md:left-auto z-50 animate-slide-in">
+          <div
+            className={`flex items-center gap-2 md:gap-3 px-4 md:px-6 py-3 md:py-4 shadow-lg border-2 ${
+              toast.type === 'success'
+                ? 'bg-white border-black'
+                : 'bg-red-50 border-red-600'
+            }`}
+          >
+            {toast.type === 'success' ? (
+              <CheckCircle className="w-4 h-4 md:w-5 md:h-5 text-black flex-shrink-0" />
+            ) : (
+              <X className="w-4 h-4 md:w-5 md:h-5 text-red-600 flex-shrink-0" />
+            )}
+            <span
+              className={`font-bold uppercase tracking-wider text-xs md:text-sm ${
+                toast.type === 'success' ? 'text-black' : 'text-red-600'
+              }`}
+            >
+              {toast.message}
+            </span>
+            <button onClick={() => setToast(null)} className="ml-auto flex-shrink-0">
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteModal && (
+        <div className="fixed inset-0 bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white max-w-md w-full border-2 border-black">
+            <div className="bg-black text-white px-4 md:px-6 py-3 md:py-4">
+              <h2 className="text-lg md:text-xl font-bold uppercase tracking-wide">Remove Item</h2>
+            </div>
+            
+            <div className="p-4 md:p-6">
+              <div className="flex items-start gap-3 md:gap-4 mb-5 md:mb-6">
+                <div className="w-10 h-10 md:w-12 md:h-12 bg-red-100 flex items-center justify-center flex-shrink-0">
+                  <AlertCircle className="w-5 h-5 md:w-6 md:h-6 text-red-600" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-black uppercase tracking-wide mb-2 text-sm md:text-base">
+                    Are you sure?
+                  </h3>
+                  <p className="text-xs md:text-sm text-gray-600 uppercase tracking-wide">
+                    This item will be removed from your cart. This action cannot be undone.
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex flex-col sm:flex-row gap-2 md:gap-3">
+                <button
+                  onClick={closeDeleteModal}
+                  disabled={updatingItem !== null}
+                  className="flex-1 px-4 md:px-6 py-2.5 md:py-3 border-2 border-black text-black font-bold uppercase tracking-wide hover:bg-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-xs md:text-sm"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={confirmRemoveItem}
+                  disabled={updatingItem !== null}
+                  className="flex-1 px-4 md:px-6 py-2.5 md:py-3 bg-red-600 text-white font-bold uppercase tracking-wide hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-xs md:text-sm"
+                >
+                  {updatingItem !== null ? (
+                    <span className="flex items-center justify-center gap-2">
+                      <div className="animate-spin rounded-full h-3 w-3 md:h-4 md:w-4 border-2 border-white border-t-transparent"></div>
+                      Removing...
+                    </span>
+                  ) : (
+                    'Remove'
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="max-w-[1400px] mx-auto px-4 sm:px-6">
         <div className="mb-6 md:mb-8">
           <h1 className="text-2xl md:text-3xl font-bold text-black mb-2 uppercase tracking-wide">Shopping Bag</h1>
@@ -187,7 +295,7 @@ export default function CartPage() {
                         {item.product.title}
                       </Link>
                       <button
-                        onClick={() => removeItem(item.id)}
+                        onClick={() => handleRemoveItem(item.id)}
                         disabled={updatingItem === item.id}
                         className="text-black hover:bg-gray-100 p-1.5 md:p-2 transition-colors disabled:opacity-50 flex-shrink-0"
                       >
@@ -325,6 +433,22 @@ export default function CartPage() {
           </div>
         </div>
       </div>
+
+      <style jsx>{`
+        @keyframes slide-in {
+          from {
+            transform: translateX(100%);
+            opacity: 0;
+          }
+          to {
+            transform: translateX(0);
+            opacity: 1;
+          }
+        }
+        .animate-slide-in {
+          animation: slide-in 0.3s ease-out;
+        }
+      `}</style>
     </div>
   );
 }
