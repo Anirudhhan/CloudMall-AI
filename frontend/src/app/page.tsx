@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { ShoppingCart, ArrowRight, Check, X } from "lucide-react";
+import { useAuth } from "./contexts/AuthContext";
 
 interface Category {
   id: number;
@@ -30,12 +31,6 @@ interface HomeData {
   products: Product[];
 }
 
-interface UserData {
-  user: any;
-  cartCount: number;
-  categories: Category[];
-}
-
 interface Toast {
   message: string;
   type: "success" | "error";
@@ -46,11 +41,12 @@ export default function HomePage() {
     categories: [],
     products: [],
   });
-  const [userData, setUserData] = useState<UserData | null>(null);
   const [loading, setLoading] = useState(true);
   const [addingToCart, setAddingToCart] = useState<number | null>(null);
   const [toast, setToast] = useState<Toast | null>(null);
   const router = useRouter();
+  
+  const { user, updateCartCount } = useAuth();
 
   const API_BASE =
     process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8080";
@@ -73,22 +69,6 @@ export default function HomePage() {
       const homeResponse = await fetch(`${API_BASE}/api/home`);
       const homeData = await homeResponse.json();
       setHomeData(homeData);
-
-      try {
-        const userResponse = await fetch(`${API_BASE}/api/user-info`, {
-          credentials: "include",
-        });
-        if (userResponse.ok) {
-          const userData = await userResponse.json();
-          setUserData({
-            user: userData.user,
-            cartCount: userData.countCart || 0,
-            categories: userData.categories || [],
-          });
-        }
-      } catch (error) {
-        console.log("User not logged in");
-      }
     } catch (error) {
       console.error("Error fetching data:", error);
     } finally {
@@ -100,8 +80,9 @@ export default function HomePage() {
     setToast({ message, type });
   };
 
+  // ✅ FIXED: Now updates AuthContext
   const handleAddToCart = async (productId: number) => {
-    if (!userData?.user) {
+    if (!user) {
       router.push("/sign-in");
       return;
     }
@@ -118,9 +99,10 @@ export default function HomePage() {
 
       if (response.ok) {
         const data = await response.json();
-        setUserData((prev) =>
-          prev ? { ...prev, cartCount: data.cartCount } : null
-        );
+        
+        // ✅ UPDATE AUTHCONTEXT - This syncs with Navbar instantly!
+        updateCartCount(data.cartCount);
+        
         showToast("PRODUCT ADDED TO CART", "success");
       } else {
         showToast("FAILED TO ADD TO CART", "error");

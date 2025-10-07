@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { SlidersHorizontal, X, ChevronDown, ChevronUp, ShoppingCart, Sparkles } from 'lucide-react';
+import { SlidersHorizontal, X, ChevronDown, ChevronUp, ShoppingCart, Sparkles, Check } from 'lucide-react';
+import { useAuth } from '../contexts/AuthContext';
 
 interface Product {
   id: number;
@@ -32,6 +33,8 @@ interface Toast {
 export default function ProductsSearchPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { user, updateCartCount } = useAuth();
+  
   const [products, setProducts] = useState<Product[]>([]);
   const [recommendedProducts, setRecommendedProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -46,11 +49,14 @@ export default function ProductsSearchPage() {
   const [totalPages, setTotalPages] = useState(0);
   const [totalElements, setTotalElements] = useState(0);
   const [toast, setToast] = useState<Toast | null>(null);
+  const [addingToCart, setAddingToCart] = useState<number | null>(null);
   
   const [showCategoryFilter, setShowCategoryFilter] = useState(true);
   const [showPriceFilter, setShowPriceFilter] = useState(true);
   const [showDiscountFilter, setShowDiscountFilter] = useState(true);
   const [showStockFilter, setShowStockFilter] = useState(true);
+
+  const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8080';
 
   useEffect(() => {
     fetchCategories();
@@ -75,7 +81,7 @@ export default function ProductsSearchPage() {
 
   const fetchCategories = async () => {
     try {
-      const response = await fetch('http://localhost:8080/api/home', {
+      const response = await fetch(`${API_BASE}/api/home`, {
         credentials: 'include'
       });
       if (response.ok) {
@@ -96,7 +102,7 @@ export default function ProductsSearchPage() {
       params.append('pageNo', currentPage.toString());
       params.append('pageSize', '12');
 
-      const response = await fetch(`http://localhost:8080/api/products?${params}`, {
+      const response = await fetch(`${API_BASE}/api/products?${params}`, {
         credentials: 'include'
       });
       
@@ -115,7 +121,7 @@ export default function ProductsSearchPage() {
 
   const fetchRecommendations = async () => {
     try {
-      const response = await fetch('http://localhost:8080/api/recommendations/for-you?limit=6', {
+      const response = await fetch(`${API_BASE}/api/recommendations/for-you?limit=6`, {
         credentials: 'include'
       });
       
@@ -130,7 +136,7 @@ export default function ProductsSearchPage() {
 
   const trackActivity = async (productId: number, action: string) => {
     try {
-      await fetch('http://localhost:8080/api/recommendations/track', {
+      await fetch(`${API_BASE}/api/recommendations/track`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -154,28 +160,38 @@ export default function ProductsSearchPage() {
   const handleAddToCart = async (e: React.MouseEvent, product: Product) => {
     e.stopPropagation();
     
+    // Check if user is logged in
+    if (!user) {
+      router.push('/sign-in');
+      return;
+    }
+
+    setAddingToCart(product.id);
     trackActivity(product.id, 'ADD_TO_CART');
     
     try {
-      const response = await fetch('http://localhost:8080/api/user/cart', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-        },
-        credentials: 'include',
-        body: new URLSearchParams({
-          productId: product.id.toString()
-        })
-      });
+      const response = await fetch(
+        `${API_BASE}/api/user/cart?productId=${product.id}`,
+        {
+          method: 'POST',
+          credentials: 'include',
+        }
+      );
 
       if (response.ok) {
+        const data = await response.json();
+        
+        updateCartCount(data.cartCount);
+        
         setToast({ message: 'PRODUCT ADDED TO CART', type: 'success' });
       } else {
-        setToast({ message: 'PLEASE LOGIN TO ADD TO CART', type: 'error' });
+        setToast({ message: 'FAILED TO ADD TO CART', type: 'error' });
       }
     } catch (error) {
       console.error('Error adding to cart:', error);
       setToast({ message: 'ERROR ADDING TO CART', type: 'error' });
+    } finally {
+      setAddingToCart(null);
     }
   };
 
@@ -233,7 +249,7 @@ export default function ProductsSearchPage() {
             }`}
           >
             {toast.type === 'success' ? (
-              <ShoppingCart className="w-4 h-4 md:w-5 md:h-5 text-black flex-shrink-0" />
+              <Check className="w-4 h-4 md:w-5 md:h-5 text-black flex-shrink-0" />
             ) : (
               <X className="w-4 h-4 md:w-5 md:h-5 text-red-600 flex-shrink-0" />
             )}
@@ -255,7 +271,7 @@ export default function ProductsSearchPage() {
         <div className="flex gap-6 lg:gap-8">
           {/* Sidebar Filters - Mobile Overlay */}
           {showFilters && (
-            <div className="fixed inset-0  bg-opacity-50 z-50 lg:hidden" onClick={() => setShowFilters(false)}>
+            <div className="fixed inset-0 bg-black bg-opacity-50 z-50 lg:hidden" onClick={() => setShowFilters(false)}>
               <div className="absolute left-0 top-0 bottom-0 w-80 max-w-[85vw] bg-white overflow-y-auto" onClick={(e) => e.stopPropagation()}>
                 <div className="sticky top-0 bg-white border-b border-gray-200 px-4 py-4 flex items-center justify-between">
                   <h2 className="text-lg font-bold text-black uppercase tracking-wide">FILTER</h2>
@@ -434,8 +450,9 @@ export default function ProductsSearchPage() {
                         </div>
                       )}
                       <button 
-                        className="absolute top-2 right-2 md:top-3 md:right-3 p-1.5 md:p-2 bg-white opacity-0 group-hover:opacity-100 transition-opacity"
+                        className="absolute top-2 right-2 md:top-3 md:right-3 p-1.5 md:p-2 bg-white md:opacity-0 md:group-hover:opacity-100 transition-opacity disabled:opacity-50"
                         onClick={(e) => handleAddToCart(e, product)}
+                        disabled={product.stock === 0 || addingToCart === product.id}
                       >
                         <ShoppingCart className="w-4 h-4 md:w-5 md:h-5 text-black" />
                       </button>
@@ -576,7 +593,7 @@ function FilterContent({
         </button>
         {showCategoryFilter && (
           <div className="space-y-2 md:space-y-3">
-            {categories.map((cat: Category) => (
+            {categories.map((cat: any) => (
               <label
                 key={cat.id}
                 className="flex items-center gap-2 md:gap-3 cursor-pointer group"
